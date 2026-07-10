@@ -1,0 +1,31 @@
+%% AutoResolve Demo Scenario Sequence Diagram
+
+%% This diagram illustrates the MVP demo scenario. It maps out the event flow
+%% where AutoResolve:
+%% - Intercepts a Prometheus memory alert.
+%% - Opens a Slack thread for the human on-call.
+%% - Utilizes an MCP client to pull Kubernetes logs and identifies the
+%%   OOMKilled exception.
+%% - Retrieves the appropriate runbook from the Vector DB.
+%% - Drafts a GitHub PR to fix the issue and tags the engineer in Slack for
+%%   final approval.
+
+sequenceDiagram
+    participant P as Prometheus
+    participant AR as AutoResolve (Webhook)
+    participant Slack as Slack
+    participant Agents as LangGraph Swarm
+    participant MCP as MCP Servers (Logs/Metrics)
+    participant Vector as Vector DB (Runbooks)
+    participant Git as GitHub
+    
+    P->>AR: Fire Alert (High Memory)
+    AR->>Slack: Open Incident Thread
+    AR->>Agents: Initiate Triage
+    Agents->>MCP: Query K8s Logs & Traces
+    MCP-->>Agents: Return OOMKilled Exception
+    Agents->>Vector: Search similar past incidents
+    Vector-->>Agents: Return Runbook for Service X
+    Agents->>Git: Draft PR to bump memory limits
+    Agents->>Slack: Notify Human with RCA & PR Link
+    Slack-->>AR: Human Approves PR

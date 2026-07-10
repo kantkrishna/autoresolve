@@ -1,0 +1,22 @@
+{
+  "name": "AutoResolve Enterprise Env",
+  "image": "mcr.microsoft.com/devcontainers/python:3.11",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  },
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/local/bin/python",
+        "python.formatting.provider": "black",
+        "editor.formatOnSave": true
+      },
+      "extensions": [
+        "ms-python.python",
+        "ms-python.black-formatter",
+        "charliermarsh.ruff"
+      ]
+    }
+  },
+  "postCreateCommand": "pip install pre-commit pytest && pre-commit install"
+}

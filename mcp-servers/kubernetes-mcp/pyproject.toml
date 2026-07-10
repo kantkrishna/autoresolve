@@ -1,0 +1,15 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "kubernetes-mcp-server"
+version = "0.1.0"
+description = "Read-Only Kubernetes MCP Server for AutoResolve"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "mcp>=0.1.0",           # Official Model Context Protocol Server SDK
+    "kubernetes>=28.1.0",   # Official Python Kubernetes Client
+    "presidio-analyzer>=2.2.35" # For scrubbing PII from logs before sending to AI
+]

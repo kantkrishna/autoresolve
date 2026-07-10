@@ -1,0 +1,66 @@
+%% AutoResolve AI Orchestration & Reasoning Component Architecture Diagram (Level 3)
+
+%% This Level 3 Component Architecture diagram details the internal application
+%% logic, data flow, and control mechanisms of the AutoResolve AI orchestrator.
+%% It illustrates how incoming alerts are securely ingested, processed by a stateful
+%% multi-agent system, and converted into actionable remediations while enforcing
+%% strict execution guardrails.
+
+%% Key Subsystems & Workflows:
+%% - Edge Security & Ingestion: Webhook alerts originating from Prometheus are
+%%   intercepted by a FastAPI gateway. This layer ensures authenticity via HMAC
+%%   signature validation and enforces rate limiting before publishing the structured
+%%   alert payload to an Apache Kafka EventBus for asynchronous processing.
+%% - LangGraph Agent Memory Loop: The core orchestration logic operates as a state
+%%   machine managed by LangGraph. It features three specialized agents—Triage,
+%%   Investigate, and Resolve—that iteratively read from and mutate a shared, typed
+%%   graph memory state, ensuring full context retention throughout the incident lifecycle.
+%% - Agnostic Reasoning Layer: To prevent vendor lock-in and ensure high availability,
+%%   the agents do not call LLM APIs directly. Instead, they route requests through a
+%%   LiteLLM Proxy, configured to use Anthropic's Claude 3.5 Sonnet as the primary
+%%   reasoning engine, with OpenAI's GPT-4o configured as an automatic fallback.
+%% - Data Retrieval & Context (MCP/RAG): During the investigation and resolution phases,
+%%   agents gather deterministic context using read-only Model Context Protocol (MCP)
+%%   clients connected to Kubernetes (for logs/traces) and Prometheus (for metrics).
+%%   Additionally, a Retrieval-Augmented Generation (RAG) pipeline queries a Qdrant
+%%   Vector Database to fetch semantically similar historical runbooks.
+%% - Execution Guardrails: Before any state-mutating action is taken (such as drafting
+%%   a Pull Request via the GitHub MCP), the Resolution Agent's output must pass through
+%%   a strict Pydantic Output Parser. If the LLM generates hallucinated or malformed
+%%   output, the guardrail fails the action and loops back to the agent for
+%%   self-correction, ensuring system safety and reliability.
+
+graph TD
+    subgraph Edge_Security
+        Webhook[Prometheus Webhook] -->|HMAC Sig| FastAuth[FastAPI Auth & Rate Limiter]
+        FastAuth -->|Push Event| EventBus[(Kafka Queue)]
+    end
+
+    subgraph LangGraph_Agent_Memory_Loop
+        EventBus --> Triage[Triage Agent]
+        Triage <-->|Mutate| State[(Typed Graph Memory)]
+        Triage --> Investigate[Investigate Agent]
+        Investigate <-->|Read/Mutate| State
+        Investigate --> Resolve[Resolution Agent]
+        Resolve <-->|Read/Mutate| State
+    end
+
+    subgraph Agnostic_Reasoning_Layer
+        Triage -.-> LLM[LiteLLM Proxy]
+        Investigate -.-> LLM
+        Resolve -.-> LLM
+        LLM -->|Primary| Claude[Claude 3.5 Sonnet]
+        LLM -->|Fallback| GPT4[OpenAI GPT-4o]
+    end
+
+    subgraph Data_Retrieval_Layer
+        Investigate -->|MCP Client| MCP_K8s[K8s MCP: Logs/Traces]
+        Investigate -->|MCP Client| MCP_Prom[Prometheus MCP: Metrics]
+        Resolve -->|RAG| VectorDB[(Qdrant: Runbooks)]
+    end
+    
+    subgraph Execution_Guardrails
+        Resolve --> Guardrail[Pydantic Output Parser]
+        Guardrail -->|Fail| Resolve
+        Guardrail -->|Pass| Github[GitHub MCP: Draft PR]
+    end

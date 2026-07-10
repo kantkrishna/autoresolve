@@ -1,0 +1,15 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "prometheus-mcp-server"
+version = "0.1.0"
+description = "Read-Only Prometheus Metrics MCP Server for AutoResolve"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "mcp>=0.1.0",                 # Official Model Context Protocol Server SDK
+    "prometheus-api-client>=0.5.5", # Simplifies complex PromQL queries
+    "httpx>=0.25.0"               # Async HTTP client for non-blocking queries
+]

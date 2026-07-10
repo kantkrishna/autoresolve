@@ -1,0 +1,43 @@
+%% AutoResolve Enterprise Monorepo Structure 
+
+%% This diagram visualizes the Enterprise Monorepo pattern. It maps to
+%% the Domain-Driven Design (DDD) principles established in the architecture,
+%% separating infrastructure from application logic. It highlights the
+%% strict decoupling between core components:
+%% - Ingestion: The FastAPI webhook gateway (src/api).
+%% - Reasoning: The isolated LangGraph state machines ("the brain" in src/agents).
+%% - Integration: The independent Python packages for custom read-only Model Context Protocol integrations (mcp-servers/).
+%% - Deployment: The infrastructure definitions, which properly isolate configuration schemas mapped to external Target Environments (like the Astronomy Shop) from the core logic (infra/).
+
+graph TD
+    Root["autoresolve/ (Root)"]
+    
+    Root --> Github[".github/"]
+    Github --> Templates["ISSUE_TEMPLATE/ & PULL_REQUEST_TEMPLATE.md"]
+    Github --> Workflows["workflows/ (CI/CD Actions)"]
+    
+    Root --> Docs["docs/"]
+    Docs --> ADR["adr/ (Architecture Decision Records)"]
+    
+    Root --> Src["src/"]
+    Src --> API["api/ (FastAPI Gateway)"]
+    Src --> Agents["agents/ (LangGraph Swarm)"]
+    Src --> RAG["rag/ (Vector DB & Chunking)"]
+    Src --> Core["core/ (Config & Security Guardrails)"]
+    
+    Root --> MCP["mcp-servers/"]
+    MCP --> K8s["kubernetes-mcp/"]
+    MCP --> Prom["prometheus-mcp/"]
+    MCP --> Git["github-mcp/"]
+    
+    Root --> Infra["infra/"]
+    Infra --> Terraform["terraform/"]
+    Infra --> Target["target-environments/ (e.g., Astronomy Shop Config)"]
+    
+    Root --> Tests["tests/"]
+    Tests --> Unit["unit/"]
+    Tests --> Integration["integration/"]
+
+    Root --> Diagrams["diagrams/"]
+    
+    Root --> RootFiles["README.md, CONTRIBUTING.md, LICENSE, Makefile"]

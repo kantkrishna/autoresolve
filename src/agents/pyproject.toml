@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "autoresolve-agents"
+version = "0.1.0"
+description = "LangGraph Multi-Agent Swarm for AutoResolve"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "langgraph>=0.0.26",
+    "langchain-core>=0.1.40",
+    "langchain-openai>=0.1.0",
+    "qdrant-client>=1.7.0",
+    "pydantic>=2.3.0",
+    "mcp>=0.1.0"  # Model Context Protocol SDK
+]

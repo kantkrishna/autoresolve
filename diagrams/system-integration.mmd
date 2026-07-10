@@ -1,0 +1,44 @@
+%% This diagram illustrates the strict decoupling between AutoResolve and the
+%% target workload (such as the OpenTelemetry Astronomy Shop). It shows how
+%% AutoResolve interacts with external environments through standard
+%% interfaces and read-only Model Context Protocol (MCP) servers, ensuring
+%% the AI platform remains agnostic to the specific target system it 
+%%  monitoring.
+graph TD
+    subgraph Target_Environment ["Target Environment (e.g., Astronomy Shop)"]
+        Microservices["Microservices Workload"]
+        K8sAPI["Kubernetes API"]
+        Prometheus["Prometheus / Alertmanager"]
+        OTel["OpenTelemetry Collector"]
+        
+        Microservices --> K8sAPI
+        Microservices --> OTel
+        OTel --> Prometheus
+    end
+
+    subgraph AutoResolve_System ["AutoResolve AI Platform"]
+        Gateway["Alert Webhook Gateway"]
+        AgentSwarm["LangGraph Agent Swarm"]
+        
+        subgraph MCP_Servers ["MCP Protocol Servers"]
+            MCP_Prom["Prometheus MCP"]
+            MCP_K8s["Kubernetes MCP"]
+            MCP_Git["GitHub MCP"]
+        end
+    end
+
+    subgraph Git_Provider ["Version Control (GitHub)"]
+        TargetRepo["Astronomy Shop Source Code Repo"]
+    end
+
+    %% Interactions
+    Prometheus -- "1. Webhook (Alerts)" --> Gateway
+    Gateway --> AgentSwarm
+    
+    AgentSwarm <--> MCP_Prom
+    AgentSwarm <--> MCP_K8s
+    AgentSwarm <--> MCP_Git
+    
+    MCP_Prom -- "2. Fetch Metrics (Read-Only)" --> Prometheus
+    MCP_K8s -- "3. Fetch Logs/State (Read-Only)" --> K8sAPI
+    MCP_Git -- "4. Draft PR Fix" --> TargetRepo

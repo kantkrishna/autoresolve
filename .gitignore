@@ -1,0 +1,21 @@
+# Python caches and environments
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+
+# Secrets (CRITICAL for Security)
+.env
+*.pem
+
+# Testing and build tools
+.pytest_cache/
+.coverage
+.mypy_cache/
+.ruff_cache/
+.DS_Store
+
+# VS Code settings
+.vscode/

@@ -1,0 +1,13 @@
+[tool.black]
+line-length = 88
+target-version = ['py311']
+
+[tool.ruff]
+line-length = 88
+# E = standard errors, F = pyflakes (unused variables), I = isort (import sorting)
+select = ["E", "F", "I"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+ignore_missing_imports = true
