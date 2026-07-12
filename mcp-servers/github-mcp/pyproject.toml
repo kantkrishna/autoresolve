@@ -7,7 +7,7 @@ name = "github-mcp-server"
 version = "0.1.0"
 description = "GitHub PR Automation MCP Server for AutoResolve"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.11,<3.14"
 dependencies = [
     "mcp>=0.1.0",       # Official Model Context Protocol Server SDK
     "PyGithub>=2.1.1",  # Official GitHub API Client

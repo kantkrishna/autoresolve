@@ -1,6 +1,5 @@
 # src/core/llm.py
-from langchain_community.chat_models import ChatLiteLLM
-from pydantic import SecretStr
+from langchain_litellm import ChatLiteLLM
 
 def get_agnostic_llm(temperature: float = 0.1) -> ChatLiteLLM:
     """
@@ -9,9 +8,9 @@ def get_agnostic_llm(temperature: float = 0.1) -> ChatLiteLLM:
     """
     return ChatLiteLLM(
         model="claude-3-5-sonnet-20240620",
-        temperature=temperature,          # Low temp for deterministic SRE logic
-        max_retries=3,                    # Retry logic for network blips
+        temperature=temperature,
+        max_retries=3,
         request_timeout=30.0,
-        fallbacks=["gpt-4o", "gemini-1.5-pro"], # Automated failover
+        fallbacks=["gpt-4o", "gemini-1.5-pro"],
         model_kwargs={"top_p": 0.9}
     )

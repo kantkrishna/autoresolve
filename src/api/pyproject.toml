@@ -7,10 +7,12 @@ name = "autoresolve-api"
 version = "0.1.0"
 description = "FastAPI Webhook Gateway for AutoResolve"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.11,<3.14"
 dependencies = [
     "fastapi>=0.103.0",
     "uvicorn>=0.23.2",
     "pydantic>=2.3.0",
-    "prometheus-client>=0.17.1"
+    "prometheus-client>=0.17.1",
+    "pydantic-settings (>=2.14.2,<3.0.0)",
+    "aiokafka (>=0.14.0,<0.15.0)"
 ]

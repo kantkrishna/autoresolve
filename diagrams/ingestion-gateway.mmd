@@ -1,0 +1,40 @@
+%% Ingestion Architecture & State Flow
+
+%% This diagram details the critical boundary layer between external monitoring
+%% infrastructure and the AutoResolve internal event bus. It maps the exact
+%% lifecycle of an incoming alert webhook, highlighting how the system ensures
+%% data integrity and high availability before the AI agents are ever invoked.
+
+%% Key Mechanisms Illustrated:
+%% - Webhook Reception: The flow begins when Prometheus Alertmanager sends an
+%%   alert payload via a POST request to the FastAPI Gateway.
+%% - Strict Schema Validation: Before any processing occurs, the payload is
+%%   intercepted by a Pydantic Guardrail. If the alert is malformed or missing
+%%   required fields, the gateway immediately rejects it with a 422 Unprocessable
+%%   Entity error, protecting downstream systems from invalid state.
+%% - Asynchronous Handoff: Validated payloads are passed to the AIOKafkaProducer,
+%%   which publishes the event to the incidents Kafka topic. Once successfully
+%%   published, the gateway immediately returns a 202 Accepted response to
+%%   Prometheus, decoupling the fast ingestion path from the slower LLM reasoning
+%%   process.
+%% - Resilience & Fallback: If the Kafka broker is unavailable, the gateway
+%%   gracefully catches the failure and returns a 503 Service Unavailable. This
+%%   explicit error code signals Alertmanager (or the on-call routing system like
+%%   PagerDuty) to bypass AutoResolve and fall back to alerting a human engineer
+%%   directly.
+
+graph TD
+    P[Prometheus Alertmanager] -->|POST /webhook| F[FastAPI Gateway]
+    
+    subgraph FastAPI Runtime
+        F -->|Validate| S[Pydantic Guardrail]
+        S -->|Validation Error| R422[422 Unprocessable Entity]
+        S -->|Pass| K_Prod[AIOKafkaProducer]
+    end
+    
+    K_Prod -->|Publish Event| Topic[(Kafka Topic: 'incidents')]
+    Topic -.->|Consumed by| LangGraph[LangGraph Agent Swarm]
+    K_Prod -->|Success| R202[202 Accepted]
+    
+    %% Fallback
+    K_Prod -->|Broker Down| R503[503 Service Unavailable -> Fallback to Human]

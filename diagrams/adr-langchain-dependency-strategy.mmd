@@ -1,0 +1,31 @@
+%% Architecture Decision Record: LangChain Package Migration
+
+%% This diagram visually documents a critical engineering decision made during
+%% Phase 5 of the AutoResolve build: the migration away from legacy monolithic
+%% libraries toward a modern, modular dependency strategy.
+%% Key Architectural Concepts Represented:
+%% - Legacy Monolithic Architecture: Historically, AI applications relied on
+%%   langchain-community, a massive, bloated package containing hundreds of
+%%   third-party integrations (OpenAI, Anthropic, LiteLLM, etc.). Installing this
+%%   monolith in a production environment introduces severe risks, including
+%%   dependency conflicts (which caused the Pytest errors in Phase 5), slower
+%%   cold-start times, and an unnecessarily large attack surface.
+%% - Modern Enterprise Architecture: The system now strictly utilizes langchain-core
+%%   as the foundational engine. Integrations are handled via specialized, decoupled
+%%   micro-packages (such as langchain-litellm). This approach guarantees strict
+%%   version control, faster Docker image builds, and enhanced operational security
+%%   by only installing the exact code the system executes.
+
+graph TD
+    subgraph Legacy Monolithic Architecture
+        LC[langchain-community] --> O[OpenAI]
+        LC --> A[Anthropic]
+        LC --> L[LiteLLM]
+        LC --> M[Many Others...]
+    end
+
+    subgraph Modern Enterprise Architecture
+        Core[langchain-core] --> LCL[langchain-litellm]
+        Core --> LCO[langchain-openai]
+        LCL --> ChatLiteLLM
+    end

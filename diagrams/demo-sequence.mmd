@@ -1,3 +1,4 @@
+sequenceDiagram
 %% AutoResolve Demo Scenario Sequence Diagram
 
 %% This diagram illustrates the MVP demo scenario. It maps out the event flow
@@ -9,8 +10,6 @@
 %% - Retrieves the appropriate runbook from the Vector DB.
 %% - Drafts a GitHub PR to fix the issue and tags the engineer in Slack for
 %%   final approval.
-
-sequenceDiagram
     participant P as Prometheus
     participant AR as AutoResolve (Webhook)
     participant Slack as Slack

@@ -7,12 +7,16 @@ name = "autoresolve-agents"
 version = "0.1.0"
 description = "LangGraph Multi-Agent Swarm for AutoResolve"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.11,<3.14"
 dependencies = [
     "langgraph>=0.0.26",
     "langchain-core>=0.1.40",
     "langchain-openai>=0.1.0",
     "qdrant-client>=1.7.0",
     "pydantic>=2.3.0",
-    "mcp>=0.1.0"  # Model Context Protocol SDK
+    "mcp>=0.1.0",  # Model Context Protocol SDK
+    "langchain-community (>=0.4.2,<0.5.0)",
+    "litellm (>=1.91.2,<2.0.0)",
+    "asyncpg (>=0.31.0,<0.32.0)",
+    "sqlalchemy (>=2.0.51,<3.0.0)"
 ]

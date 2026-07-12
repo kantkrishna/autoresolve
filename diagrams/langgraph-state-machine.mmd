@@ -1,0 +1,54 @@
+%% LangGraph State Machine Architecture
+
+%% This diagram maps out the multi-agent cyclic orchestration flow running inside the
+%% LangGraph worker. It highlights how AutoResolve functions as a deterministic,
+%% stateful reactive system by mapping individual node executions to conditional and
+%% cyclic edges based on the updated IncidentState memory dictionary.
+
+%% Detailed Workflow & Core States:
+%% - Ingestion to Triage: The workflow is triggered by an incoming event consumed from
+%%   the Kafka incidents topic. The system transitions into the TriageNode, which
+%%   internally evaluates the event payload via parallel sub-steps (Analyze_Severity
+%%   and Determine_Routing) to judge whether it represents an actionable alert or
+%%   transient noise.
+%% - Routing Decisions: * If the alert is deemed a False Positive (Noise), it routes
+%%   directly to the ReportNode to be silenced, avoiding alert fatigue for the
+%%   engineering team.
+%%   - If it is validated as a Critical / Warning incident, the graph transitions to
+%%     the InvestigationNode.
+%% - Cyclic Self-Correction & Reasoning Loop: * The Investigation Loop: The
+%%   InvestigationNode gathers diagnostic details (via Prometheus/Kubernetes MCP
+%%   servers). If it analyzes the data and finds it needs more diagnostic data, it
+%%   executes a cyclic edge back to itself until logs/metrics are fully gathered.
+%%   - The Remediation Loop: Once the context is set, control shifts to the
+%%     ResolutionNode to draft a fix using historical runbook context, passing it to
+%%     the ExecutionNode to generate a patch.
+%%   - The Human-in-the-Loop Review: The drafted patch reaches the ReviewNode
+%%     (mirroring the Slack approval webhook step). If a human engineer rejects the
+%%     solution, a cyclic loop sends control back to the ExecutionNode to rewrite the
+%%     remediation, preventing broken configurations from reaching production. If
+%%     approved, it flows into the final ReportNode where the incident state compiles
+%%     an aftermath report before concluding.
+
+stateDiagram-v2
+    direction TB
+    [*] --> TriageNode: Incoming Kafka Event
+    
+    state TriageNode {
+        direction LR
+        Analyze_Severity --> Determine_Routing
+    }
+    
+    TriageNode --> InvestigationNode: Critical / Warning
+    TriageNode --> ReportNode: False Positive (Noise)
+    
+    InvestigationNode --> ResolutionNode: Logs Gathered
+    InvestigationNode --> InvestigationNode: Needs More Context (Cyclic)
+    
+    ResolutionNode --> ExecutionNode: Fix Identified
+    ExecutionNode --> ReviewNode: PR Drafted
+    
+    ReviewNode --> ExecutionNode: Rejected (Rewrite Fix)
+    ReviewNode --> ReportNode: Approved (LGTM)
+    
+    ReportNode --> [*]: End (Wait for Human)
