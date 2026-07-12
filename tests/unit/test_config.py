@@ -11,14 +11,14 @@ def test_missing_kafka_fails_validation(monkeypatch):
     monkeypatch.setenv("POSTGRES_DSN", "postgresql://user:pass@localhost:5432/db")
     monkeypatch.setenv("QDRANT_URL", "http://localhost:6333")
     monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-mock-key")
-    
+
     # Explicitly remove the mock environment variable set by conftest.py
     monkeypatch.delenv("KAFKA_BOOTSTRAP_SERVERS", raising=False)
-    
+
     # Missing KAFKA_BOOTSTRAP_SERVERS
     with pytest.raises(ValidationError) as exc_info:
         AutoResolveConfig()
-    
+
     assert "KAFKA_BOOTSTRAP_SERVERS" in str(exc_info.value)
 
 

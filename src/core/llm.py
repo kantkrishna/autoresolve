@@ -1,6 +1,7 @@
 # src/core/llm.py
 from langchain_litellm import ChatLiteLLM
 
+
 def get_agnostic_llm(temperature: float = 0.1) -> ChatLiteLLM:
     """
     Instantiates an LLM client agnostic to the backend provider.
@@ -12,5 +13,5 @@ def get_agnostic_llm(temperature: float = 0.1) -> ChatLiteLLM:
         max_retries=3,
         request_timeout=30.0,
         fallbacks=["gpt-4o", "gemini-1.5-pro"],
-        model_kwargs={"top_p": 0.9}
+        model_kwargs={"top_p": 0.9},
     )

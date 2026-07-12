@@ -5,7 +5,6 @@ from typing import Any, Optional
 
 from aiokafka import AIOKafkaProducer
 
-# We will inject the configuration at runtime
 from src.core.config import settings
 
 logger = logging.getLogger(__name__)
@@ -30,14 +29,14 @@ class EventPublisher:
             await self.producer.stop()
             logger.info("Kafka Producer connection closed.")
 
-    async def publish_alert(self, topic: str, payload: dict[str, Any]) -> None:
+    # REFACTORED: Now requires a partition key
+    async def publish_alert(self, topic: str, payload: dict[str, Any], key: str) -> None:
         if not self.producer:
-            raise RuntimeError(
-                "Kafka Producer is not initialized. Check lifespan hooks."
-            )
-        await self.producer.send_and_wait(topic, payload)
-        logger.info(f"Successfully queued alert to topic: {topic}.")
+            raise RuntimeError("Kafka Producer is not initialized.")
+
+        # The key guarantees alerts for the same service are processed sequentially
+        await self.producer.send_and_wait(topic, value=payload, key=key.encode("utf-8"))
+        logger.info(f"Successfully queued alert to {topic} with Tracking ID: {key[:8]}")
 
 
-# Global singleton instance
 publisher = EventPublisher()

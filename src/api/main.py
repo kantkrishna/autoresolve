@@ -1,7 +1,7 @@
 # src/api/main.py
 import logging
 from contextlib import asynccontextmanager
-from typing import AsyncGenerator
+from typing import Any, AsyncGenerator
 
 from fastapi import FastAPI, HTTPException, status
 
@@ -14,7 +14,6 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
-    """Manages global connections tied to the API lifecycle."""
     try:
         await publisher.start()
     except Exception as e:
@@ -32,20 +31,25 @@ app = FastAPI(
 
 
 @app.post("/webhook/prometheus", status_code=status.HTTP_202_ACCEPTED)
-async def ingest_alert(alert: PrometheusAlert) -> dict[str, str]:
-    """
-    Ingest alerts, validate against prompt injection, and queue to Kafka.
-    """
+async def ingest_alert(alert: PrometheusAlert) -> dict[str, Any]:
+    """Ingest alerts, validate against prompt injection, and queue to Kafka."""
     try:
-        # Convert the Pydantic model to a dictionary and queue it
-        await publisher.publish_alert("incidents", alert.model_dump())
+        # Extract the computed deterministic hash
+        incident_id = alert.tracking_id
+
+        # Publish with the partition key
+        await publisher.publish_alert(
+            topic="incidents", payload=alert.model_dump(), key=incident_id
+        )
+
+        # Return observability trace to the caller
         return {
             "status": "accepted",
-            "message": "Alert queued for autonomous AI triage.",
+            "tracking_id": incident_id,
+            "message": "Alert safely queued for autonomous AI triage.",
         }
     except Exception as e:
         logger.error(f"Broker failure during alert publishing: {e}")
-        # Return 503 so Alertmanager knows to trigger the human fallback channel
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Event broker unavailable. AI degraded; routing to human fallback.",
