@@ -1,0 +1,47 @@
+%% MCP Integration Architecture
+
+%% This diagram details the Data Retrieval Layer of the AutoResolve system. It
+%% visualizes the execution of Phase 7, demonstrating how the LangGraph AI agents are
+%% strictly decoupled from the target infrastructure's APIs using the Model Context
+%% Protocol (MCP). This Client-Server architecture ensures the core AI reasoning loop
+%% never contains hardcoded API logic.
+
+%% Key Architectural Mechanisms & Security Boundaries:
+%% - The LangGraph Client: Inside the AI worker, the InvestigationNode operates
+%%   strictly as an MCP Client. It does not know how to talk to Kubernetes or
+%%   Prometheus; it only knows how to ask the MCP servers what tools are available,
+%%   injecting the results back into the shared IncidentState memory.
+%% - JSON-RPC over Stdio (The Security Airgap): A critical enterprise security tradeoff
+%%   is highlighted at the MCP Boundary. Rather than exposing the MCP servers over
+%%   REST/HTTP (which would require complex OAuth/JWT overhead), the LangGraph worker
+%%   physically spawns the MCP Python scripts as local subprocesses. Communication
+%%   occurs entirely over Standard Input/Output (Stdio) via JSON-RPC. This guarantees
+%%   an impenetrable boundary with zero exposed network ports.
+%% - Dynamic Tool Schema: Upon spawning, the MCP servers dynamically return their
+%%   available tool schemas (e.g., query_cpu_metrics, get_pod_logs) as JSON. This
+%%   allows the AI (Claude) to autonomously decide which tools to fire without
+%%   hardcoded developer intervention.
+%% - Agnostic Target Environments: The actual execution of kubectl commands and PromQL
+%%   queries is offloaded entirely to the isolated MCP servers. If the target
+%%   environment changes (e.g., moving from Prometheus to Datadog), only the MCP server
+%%   needs to be updated; the AutoResolve LangGraph brain remains completely untouched.
+
+graph TD
+    subgraph AutoResolve_LangGraph_Worker
+        State[(IncidentState Memory)]
+        IN[InvestigationNode - MCP Client]
+        State <-->|Read / Write| IN
+    end
+
+    subgraph MCP_Boundary [JSON-RPC over Stdio Protocol]
+        IN -->|1. spawn subprocess| K8s[Kubernetes MCP Server]
+        IN -->|1. spawn subprocess| Prom[Prometheus MCP Server]
+        
+        K8s -->|2. return JSON tool schema| IN
+        Prom -->|2. return JSON tool schema| IN
+    end
+
+    subgraph Target_Environments
+        K8s -.->|kubectl / API| K8sCluster[Target K8s Cluster]
+        Prom -.->|PromQL| PromServer[Target Prometheus]
+    end

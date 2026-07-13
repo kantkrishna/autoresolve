@@ -7,6 +7,7 @@ from langchain_core.messages import SystemMessage
 from src.agents.schemas import TriageOutput
 from src.agents.state import IncidentState
 from src.core.llm import get_agnostic_llm
+from src.core.mcp_client import execute_mcp_tool
 
 logger = logging.getLogger(__name__)
 llm = get_agnostic_llm(temperature=0.1)
@@ -41,21 +42,33 @@ def triage_node(state: IncidentState) -> dict[str, Any]:
     }
 
 
-def investigation_node(state: IncidentState) -> dict[str, Any]:
-    """Gathers logs and metrics (Placeholder for Phase 7 MCP Integration)."""
-    logger.info("Executing InvestigationNode")
+async def investigation_node(state: IncidentState) -> dict[str, Any]:
+    """Dynamically gathers logs and metrics via MCP JSON-RPC servers."""
+    logger.info("Executing InvestigationNode via MCP")
+
+    service = state.get("impacted_service", "unknown-service")
+
+    # 1. Ask the Prometheus MCP Server for metrics
+    metrics_result = await execute_mcp_tool(
+        script_path="mcp-servers/prometheus-mcp/prom_server.py",
+        tool_name="query_cpu_metrics",
+        args={"service_name": service},
+    )
+
+    # 2. Ask the Kubernetes MCP Server for logs
+    logs_result = await execute_mcp_tool(
+        script_path="mcp-servers/kubernetes-mcp/k8s_server.py",
+        tool_name="get_pod_logs",
+        args={"namespace": "default", "pod_name": service},
+    )
+
+    # Combine findings
+    findings = f"Metrics: {metrics_result}\nLogs: {logs_result}"
+
     return {
-        # This will securely slide through the reduce_logs window
-        "retrieved_logs": [
-            "[INFO] System stable",
-            "[ERROR] OOMKilled Exception in payment-gateway",
-        ],
-        "root_cause_hypothesis": "The payment-gateway service exceeded memory limits.",
-        "messages": [
-            SystemMessage(
-                content="Investigation complete. Logs retrieved and hypothesis formed."
-            )
-        ],
+        "retrieved_logs": [logs_result],
+        "root_cause_hypothesis": "Context gathered via MCP tools.",
+        "messages": [SystemMessage(content=f"MCP Investigation complete. {findings}")],
     }
 
 
