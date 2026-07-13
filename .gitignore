@@ -22,3 +22,7 @@ env/
 
 # Repomix output
 repomix-output.xml
+
+# Observability & Tracing
+.opensmith/traces.db
+.opensmith/traces.db-journal

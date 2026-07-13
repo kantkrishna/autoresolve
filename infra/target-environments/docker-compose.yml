@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  # The Target Metric Server (Our MCP Server will query this)
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: mock-prometheus
+    ports:
+      - "9090:9090"
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+
+  # The Target Microservice (Our MCP Server will fetch logs from this)
+  payment-gateway:
+    image: nginx:alpine
+    container_name: payment-gateway
+    ports:
+      - "8080:80"

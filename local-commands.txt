@@ -1,0 +1,12 @@
+# Commands for strict code compliance checks
+poetry run black .
+poetry run ruff check . --fix
+poetry run mypy src/
+
+# Run the unit/integration tests
+poetry run pytest tests/unit/test_graph.py
+
+# Command to run OpenSmith UI
+$env:OPENSMITH_CONFIG_PATH=".opensmith/config.json"
+poetry run opensmith ui
+

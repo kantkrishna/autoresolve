@@ -44,7 +44,8 @@ dependencies = [
     "litellm (>=1.91.2,<2.0.0)",
     "langchain-litellm (>=0.7.0,<0.8.0)",
     "langgraph (>=1.2.9,<2.0.0)",
-    "langchain-core (>=1.4.9,<2.0.0)"
+    "langchain-core (>=1.4.9,<2.0.0)",
+    "opensmith (>=0.1.5,<0.2.0)"
 ]
 
 

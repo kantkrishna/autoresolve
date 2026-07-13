@@ -1,6 +1,7 @@
 # src/agents/graph.py
 from typing import Literal
 
+from langgraph.checkpoint.memory import MemorySaver  # <-- Add this import
 from langgraph.graph import END, StateGraph
 
 from src.agents.nodes import (
@@ -42,7 +43,12 @@ def build_incident_graph() -> StateGraph:
     workflow.add_edge("resolution_node", "report_node")
     workflow.add_edge("report_node", END)
 
-    return workflow.compile()
+    # This saves the graph's memory at every single step, allowing for
+    # Human-in-the-Loop pauses or resuming from a network crash.
+    checkpointer = MemorySaver()
+
+    # Compile the graph passing the checkpointer
+    return workflow.compile(checkpointer=checkpointer)
 
 
 incident_graph = build_incident_graph()
