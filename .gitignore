@@ -21,4 +21,4 @@ env/
 .vscode/
 
 # Repomix output
-repomix-output
+repomix-output.xml

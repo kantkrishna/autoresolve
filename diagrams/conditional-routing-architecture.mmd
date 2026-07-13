@@ -1,0 +1,35 @@
+%% LangGraph Conditional Routing Architecture
+
+%% The 6-Agent Swarm Logic:
+%% - Triage Agent: Analyzes the raw Prometheus payload. Extracts the service name,
+%%   determines severity, and makes a routing decision (Is this actionable, or
+%%   transient noise?).
+%% - Investigation Agent: Reads the Triage context. (In Phase 7, this will execute
+%%   MCP tools to fetch K8s logs/metrics). Appends findings to state.
+%% - Resolution Agent: Reads findings. Queries RAG runbooks to determine the correct
+%%   fix.
+%% - Execution Agent: Drafts the actual Terraform or Kubernetes YAML patch.
+%% - Review Agent: Halts execution for Human-in-the-Loop (HITL) approval.
+%% - Incident Report Agent: Generates the final post-mortem and closes the ticket.
+
+stateDiagram-v2
+    direction TB
+    [*] --> TriageNode: Alert Received
+    
+    state Triage_Decision <<choice>>
+    TriageNode --> Triage_Decision: Assess Severity
+    
+    Triage_Decision --> InvestigationNode: Severity == Critical/Warning
+    Triage_Decision --> ReportNode: Severity == False Positive (Noise)
+    
+    InvestigationNode --> InvestigationNode: Need More Context (Cyclic)
+    InvestigationNode --> ResolutionNode: Logs Gathered / RCA
+    
+    ResolutionNode --> ExecutionNode: Fix Proposed
+    
+    ExecutionNode --> ReviewNode: PR Drafted
+    
+    ReviewNode --> ReportNode: Approved
+    ReviewNode --> ExecutionNode: Rejected / Rewrite (Cyclic)
+    
+    ReportNode --> [*]: Incident Closed
