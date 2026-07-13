@@ -19,3 +19,6 @@ env/
 
 # VS Code settings
 .vscode/
+
+# Repomix output
+repomix-output

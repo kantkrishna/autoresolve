@@ -6,7 +6,7 @@ from src.core.llm import get_agnostic_llm
 
 
 def test_litellm_configuration():
-    """Ensure the LLM router is configured with the correct primary model and parameters.""" # noqa: E501
+    """Ensure the LLM router is configured with the correct primary model and parameters."""  # noqa: E501
     llm = get_agnostic_llm()
 
     # We verify the primary model and the temperature constraint.

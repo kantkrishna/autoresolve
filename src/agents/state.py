@@ -6,7 +6,7 @@ from langchain_core.messages import BaseMessage
 from pydantic import BaseModel
 
 
-# --- FIX D: Strict Type Hinting for Metrics ---
+# Strict Type Hinting for Metrics
 class MetricTimeSeries(BaseModel):
     """Strict schema to ensure the LLM receives consistently formatted Prometheus data."""  # noqa: E501
 
@@ -20,7 +20,7 @@ class TelemetryData(BaseModel):
     metrics: Dict[str, MetricTimeSeries]
 
 
-# --- FIX C: Graph Memory Bloat Mitigation ---
+# Graph Memory Bloat Mitigation
 def reduce_logs(existing_logs: List[str], new_logs: List[str]) -> List[str]:
     """
     Custom LangGraph Reducer: Acts as a sliding window.
@@ -31,8 +31,8 @@ def reduce_logs(existing_logs: List[str], new_logs: List[str]) -> List[str]:
     return combined[-500:]
 
 
-# --- MASTER AGENT STATE ---
-class IncidentState(TypedDict):
+# MASTER AGENT STATE: Added total=False to allow agents to return partial state updates
+class IncidentState(TypedDict, total=False):
     """
     The central memory object for the LangGraph swarm.
     """
@@ -43,6 +43,7 @@ class IncidentState(TypedDict):
     incident_id: str
     severity: str
     impacted_service: str
+    next_step: str  # <-- ADDED: Crucial for Graph Routing
 
     # Safely bounded Context Engineering
     retrieved_logs: Annotated[List[str], reduce_logs]  # Sliding window applied

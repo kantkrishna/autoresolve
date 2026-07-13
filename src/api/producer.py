@@ -30,7 +30,9 @@ class EventPublisher:
             logger.info("Kafka Producer connection closed.")
 
     # REFACTORED: Now requires a partition key
-    async def publish_alert(self, topic: str, payload: dict[str, Any], key: str) -> None:
+    async def publish_alert(
+        self, topic: str, payload: dict[str, Any], key: str
+    ) -> None:
         if not self.producer:
             raise RuntimeError("Kafka Producer is not initialized.")
 

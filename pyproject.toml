@@ -16,6 +16,8 @@ ignore_missing_imports = true
 plugins = ["pydantic.mypy"]
 follow_imports = "skip"
 disable_error_code = ["misc", "untyped-decorator"]
+explicit_package_bases = true
+mypy_path = "src"
 
 [tool.pydantic-mypy]
 init_forbid_extra = true
@@ -40,7 +42,9 @@ dependencies = [
     "pydantic (>=2.13.4,<3.0.0)",
     "langchain-community (>=0.4.2,<0.5.0)",
     "litellm (>=1.91.2,<2.0.0)",
-    "langchain-litellm (>=0.7.0,<0.8.0)"
+    "langchain-litellm (>=0.7.0,<0.8.0)",
+    "langgraph (>=1.2.9,<2.0.0)",
+    "langchain-core (>=1.4.9,<2.0.0)"
 ]
 
 
