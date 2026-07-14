@@ -25,9 +25,10 @@ class AutoResolveConfig(BaseSettings):
     QDRANT_API_KEY: str = Field(default="", description="Qdrant API Key (if hosted)")
 
     # AI & Orchestration
-    ANTHROPIC_API_KEY: str = Field(
-        ..., description="Anthropic API key for Claude 3.5 Sonnet"
-    )
+    # ANTHROPIC_API_KEY: str = Field(
+    #     ..., description="Anthropic API key for Claude 3.5 Sonnet"
+    # )
+    OPENAI_API_KEY: str = Field(..., description="OpenAI API key for GPT-5 Nano")
     LANGCHAIN_TRACING_V2: str = Field(
         default="true", description="Enable LangSmith observability"
     )

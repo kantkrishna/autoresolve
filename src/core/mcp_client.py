@@ -26,6 +26,5 @@ async def execute_mcp_tool(
 
             # Execute the requested tool
             result = await session.call_tool(tool_name, arguments=args)
-
             # Extract text content from the MCP response object
             return str(result.content[0].text)

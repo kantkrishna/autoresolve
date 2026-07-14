@@ -13,3 +13,9 @@ poetry run opensmith ui
 # Command to run Open WebUI
 docker run -d -p 3000:8080 -v open-webui:/app/backend/data --name open-webui ghcr.io/open-webui/open-webui:main
 http://localhost:3000
+
+# Build docker containers in docker-compose.yml
+docker compose up -d
+
+# Pull Qdrant vector DB
+docker pull qdrant/qdrant

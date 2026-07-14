@@ -8,6 +8,7 @@ from src.agents.schemas import TriageOutput
 from src.agents.state import IncidentState
 from src.core.llm import get_agnostic_llm
 from src.core.mcp_client import execute_mcp_tool
+from src.rag.vector_store import get_vector_store
 
 logger = logging.getLogger(__name__)
 llm = get_agnostic_llm(temperature=0.1)
@@ -73,12 +74,38 @@ async def investigation_node(state: IncidentState) -> dict[str, Any]:
 
 
 def resolution_node(state: IncidentState) -> dict[str, Any]:
-    """Determines the fix (Placeholder for Phase 8 RAG Integration)."""
-    logger.info("Executing ResolutionNode")
+    """Queries the Vector DB for historical runbooks to formulate a fix."""
+    logger.info("Executing ResolutionNode via Hybrid RAG")
+
+    # 1. Extract what we found during investigation
+    hypothesis = state.get("root_cause_hypothesis", "")
+    service = state.get("impacted_service", "")
+
+    # 2. Query Qdrant
+    vector_store = get_vector_store()
+    search_query = f"Fix for {service} {hypothesis}"
+
+    # Fetch the top 1 most relevant runbook
+    docs = vector_store.similarity_search(search_query, k=1)
+
+    retrieved_runbook = (
+        docs[0].page_content if docs else "No historical runbooks found."
+    )
+
+    # 3. Formulate the fix
+    prompt = f"""
+    Based on the incident findings: {hypothesis}
+    And the retrieved historical runbook: {retrieved_runbook}
+    
+    Formulate a brief, 1-sentence proposed fix.
+    """
+
+    response = llm.invoke([SystemMessage(content=prompt)])
+
     return {
-        "proposed_fix_pr_url": "https://github.com/mock-org/repo/pull/1",
+        "proposed_fix_pr_url": str(response.content),
         "messages": [
-            SystemMessage(content="Resolution strategy formulated and PR drafted.")
+            SystemMessage(content=f"Resolution strategy formulated: {response.content}")
         ],
     }
 
