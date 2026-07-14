@@ -25,16 +25,16 @@ class AutoResolveConfig(BaseSettings):
     QDRANT_API_KEY: str = Field(default="", description="Qdrant API Key (if hosted)")
 
     # AI & Orchestration
-    # ANTHROPIC_API_KEY: str = Field(
-    #     ..., description="Anthropic API key for Claude 3.5 Sonnet"
-    # )
-    OPENAI_API_KEY: str = Field(..., description="OpenAI API key for GPT-5 Nano")
+    OPENAI_API_KEY: str = Field(..., description="OpenAI API key")
     LANGCHAIN_TRACING_V2: str = Field(
         default="true", description="Enable LangSmith observability"
     )
 
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
+    # OLLAMA Hybrid Routing
+    LLM_BACKEND: str = Field(default="local", description="Choose 'cloud' or 'local'")
+    LOCAL_MODEL_NAME: str = Field(default="ollama/qwen2.5-coder:3b")
 
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
-# Singleton instance to be injected into FastAPI and LangGraph workers
+# Instantiate the config so other modules can import `settings`
 settings = AutoResolveConfig()
