@@ -11,3 +11,4 @@ graph LR
     subgraph Target Environment
         K8sServer -.->|kubectl / REST| Cluster[Production Cluster]
     end
+```

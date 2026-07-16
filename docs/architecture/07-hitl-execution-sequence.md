@@ -12,3 +12,4 @@ sequenceDiagram
     Human->>Slack: Clicks "Approve"
     Slack->>Check: Resume Graph State
     Check->>Agent: Merge PR
+```

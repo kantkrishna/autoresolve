@@ -47,3 +47,4 @@ graph TD
     LG <-->|Runbook Semantic Search| QD
     GHA -->|Deploy| FA
     GHA -->|Deploy| LG
+```

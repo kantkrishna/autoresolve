@@ -36,5 +36,6 @@ class AutoResolveConfig(BaseSettings):
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
+
 # Instantiate the config so other modules can import `settings`
 settings = AutoResolveConfig()

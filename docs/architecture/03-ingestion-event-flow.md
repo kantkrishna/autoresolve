@@ -10,3 +10,4 @@ sequenceDiagram
     API->>K: Publish to 'incident-alerts' topic
     API-->>P: HTTP 202 Accepted
     deactivate API
+```

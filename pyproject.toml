@@ -68,3 +68,7 @@ dev = [
     "pydantic (>=2.13.4,<3.0.0)",
     "pytest-asyncio (>=1.4.0,<2.0.0)"
 ]
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+disallow_untyped_defs = false

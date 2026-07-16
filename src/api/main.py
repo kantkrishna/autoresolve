@@ -3,9 +3,11 @@ import logging
 from contextlib import asynccontextmanager
 from typing import Any, AsyncGenerator
 
-from fastapi import FastAPI, HTTPException, status
+from fastapi import Depends, FastAPI, HTTPException, status
 
+from src.api.auth import verify_api_key
 from src.api.producer import publisher
+from src.api.rate_limit import RateLimiter
 from src.api.schemas import PrometheusAlert
 
 logging.basicConfig(level=logging.INFO)
@@ -30,7 +32,14 @@ app = FastAPI(
 )
 
 
-@app.post("/webhook/prometheus", status_code=status.HTTP_202_ACCEPTED)
+@app.post(
+    "/webhook/prometheus",
+    status_code=status.HTTP_202_ACCEPTED,
+    dependencies=[
+        Depends(verify_api_key),
+        Depends(RateLimiter(requests_per_minute=100)),
+    ],
+)
 async def ingest_alert(alert: PrometheusAlert) -> dict[str, Any]:
     """Ingest alerts, validate against prompt injection, and queue to Kafka."""
     try:

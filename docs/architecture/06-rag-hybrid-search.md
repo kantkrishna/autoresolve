@@ -8,3 +8,4 @@ graph TD
     
     DB -->|Reciprocal Rank Fusion| Result[Top Runbook Retrieved]
     Result --> ResolutionAgent[Resolution Agent Prompts Fix]
+```

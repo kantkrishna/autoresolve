@@ -27,3 +27,4 @@ graph TD
     AR -- "4. Generates Reasoning" --> LLM
     AR -- "5. Opens Remediation PR" --> G
     S -- "6. Approves/Rejects Fix" --> AR
+```
