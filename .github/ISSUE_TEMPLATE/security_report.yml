@@ -1,0 +1,12 @@
+﻿name: Security Vulnerability Report
+description: Instructions for securely reporting a vulnerability.
+title: "[SECURITY] "
+labels: ["security"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 🛑 STOP! Do not report security vulnerabilities in public issues!
+        If you have discovered a security vulnerability in AutoResolve (e.g., Prompt Injection, MCP Privilege Escalation, Secret Leakage), please **DO NOT** open a public issue.
+        
+        Instead, please email the security team directly at security@example.com or use the GitHub Security Advisory feature.

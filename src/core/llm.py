@@ -1,6 +1,8 @@
 # src/core/llm.py
 from langchain_litellm import ChatLiteLLM
+
 from src.core.config import settings
+
 
 def get_agnostic_llm(temperature: float = 0.1) -> ChatLiteLLM:
     """

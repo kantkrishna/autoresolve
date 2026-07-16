@@ -3,6 +3,12 @@ poetry run black .
 poetry run ruff check . --fix
 poetry run mypy src/
 
+# Start ollama LLM instance
+ollama run qwen2.5-coder:3b
+
+# Command to execute sandbox
+poetry run python sandbox.py
+
 # Run the unit/integration tests
 poetry run pytest tests/unit/test_graph.py
 

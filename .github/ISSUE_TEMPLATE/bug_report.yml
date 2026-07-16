@@ -1,0 +1,41 @@
+﻿name: Bug Report
+description: Create a report to help us improve AutoResolve
+title: "[BUG] "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report!
+  - type: input
+    id: version
+    attributes:
+      label: AutoResolve Version
+      description: Which version or commit hash are you running?
+      placeholder: e.g., v0.1.0 or main@abcdef
+    validations:
+      required: true
+  - type: dropdown
+    id: llm_backend
+    attributes:
+      label: LLM Backend
+      description: Which model provider were you using?
+      options:
+        - Anthropic (Claude)
+        - OpenAI (GPT)
+        - Local (Ollama/vLLM)
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Describe the bug
+      description: A clear and concise description of what the bug is.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant Logs (LangSmith or Console)
+      description: Please paste any relevant error logs or LangGraph traces.
+      render: shell

@@ -1,17 +1,17 @@
 # sandbox.py
 import asyncio
 import logging
-from dotenv import load_dotenv
-load_dotenv()
 
+from dotenv import load_dotenv
 from langchain_core.messages import HumanMessage
 
 from src.agents.graph import incident_graph
 from src.agents.state import IncidentState
 from src.rag.vector_store import ingest_document
 
-logging.basicConfig(level=logging.INFO)
+load_dotenv()
 
+logging.basicConfig(level=logging.INFO)
 
 async def run_sandbox():
     print("--- 1. Ingesting Runbook into Qdrant ---")

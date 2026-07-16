@@ -1,0 +1,19 @@
+﻿name: Feature Request
+description: Suggest an idea for AutoResolve
+title: "[FEATURE] "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: motivation
+    attributes:
+      label: Motivation / Use Case
+      description: Why is this feature needed? What problem does it solve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposed_solution
+    attributes:
+      label: Proposed Solution
+      description: Describe the technical implementation or expected behavior.
+    validations:
+      required: true

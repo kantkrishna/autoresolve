@@ -1,11 +1,11 @@
 # src/rag/vector_store.py
 import logging
+from typing import Any
 
 from langchain_community.embeddings.fastembed import FastEmbedEmbeddings
 from langchain_core.documents import Document
 from langchain_qdrant import FastEmbedSparse, QdrantVectorStore, RetrievalMode
 from qdrant_client import QdrantClient, models
-from typing import Any
 
 logger = logging.getLogger(__name__)
 
