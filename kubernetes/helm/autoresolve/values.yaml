@@ -1,0 +1,24 @@
+replicaCount: 2
+
+image:
+  repository: ghcr.io/your-org/autoresolve
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+serviceAccount:
+  create: true
+  name: "autoresolve-sa"
+  # Ensures the agent has permissions to read pods/logs for the MCP Server
+  roles:
+    - apiGroups: [""]
+      resources: ["pods", "pods/log", "events"]
+      verbs: ["get", "list", "watch"]
+
+apiGateway:
+  service:
+    type: ClusterIP
+    port: 80
+
+env:
+  KAFKA_BOOTSTRAP_SERVERS: "my-cluster-kafka-bootstrap:9092"
+  QDRANT_URL: "http://qdrant-service:6333"

@@ -36,6 +36,9 @@ def test_rate_limiting(monkeypatch: Any) -> None:
     monkeypatch.setenv("AUTORESOLVE_API_KEY", "test-secret")
     headers = {"X-API-Key": "test-secret"}
 
+    # Reset global state to ensure test isolation
+    rate_limiter.clients.clear()
+
     assert client.get("/secure-endpoint", headers=headers).status_code == 200
     assert client.get("/secure-endpoint", headers=headers).status_code == 200
     response = client.get("/secure-endpoint", headers=headers)

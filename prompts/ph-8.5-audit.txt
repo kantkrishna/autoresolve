@@ -1,0 +1,282 @@
+Prompt: AutoResolve Phase 8.5 – Gap Closure & Compliance Sprint
+You are continuing development of AutoResolve – Autonomous Incident Response & Remediation Engine.
+You have been provided:
+1.	The complete Repomix output of the current repository.
+2.	An independent engineering audit that evaluated the repository against the original project specification through Phase 8.
+The audit identified that the repository is approximately 65% complete through Phase 8 and contains several architectural and implementation gaps.
+Your objective is NOT to redesign the project.
+Your objective is to close every identified gap while preserving the existing architecture, coding style, module boundaries, and design philosophy.
+Assume the repository is already well-structured and contains high-quality implementations of:
+•	Clean Architecture
+•	DDD
+•	LangGraph orchestration
+•	FastAPI
+•	Kafka event ingestion
+•	Qdrant hybrid search
+•	MCP Stdio execution
+•	Strict typing
+•	Dependency injection
+Only implement missing or incomplete functionality.
+________________________________________
+Source of Truth
+Use the following documents as the authoritative references:
+1.	Original AutoResolve Project Specification (Phases 0–16).
+2.	Phase 0–8 Audit Report.
+The audit findings take precedence when identifying implementation gaps.
+________________________________________
+Engineering Constraints
+Do NOT rewrite working code.
+Do NOT refactor unrelated modules.
+Do NOT introduce unnecessary frameworks.
+Do NOT change existing public interfaces unless absolutely required.
+Minimize churn.
+Follow existing coding conventions.
+Preserve backwards compatibility.
+Every change must integrate cleanly with the current architecture.
+________________________________________
+Gap Closure Objectives
+Implement every missing or partially implemented requirement identified in the audit.
+________________________________________
+Phase 0 Documentation
+Create comprehensive documentation including:
+•	docs/vision.md
+•	Product Vision
+•	Goals
+•	Target Users
+•	Functional Requirements
+•	Non-functional Requirements
+•	Success Metrics
+•	Demo Scenario
+•	Resume Value
+________________________________________
+Phase 1 Architecture
+Complete the missing architecture documentation.
+Add:
+•	Deployment Diagram
+•	Threat Model
+•	Trust Boundary documentation
+•	Failure Scenarios
+•	Recovery Strategies
+•	Architecture Decision Records (ADR)
+Use Mermaid.
+Ensure consistency with the implemented architecture.
+________________________________________
+Phase 2 Repository
+Complete repository assets.
+Generate:
+README.md
+including:
+•	Project overview
+•	Architecture
+•	Features
+•	Screenshots/diagrams
+•	Installation
+•	Local development
+•	Running MCP servers
+•	Configuration
+•	Examples
+•	Testing
+•	Roadmap
+Create:
+•	.github/ISSUE_TEMPLATE/
+•	Bug report template
+•	Feature request template
+•	Security report template
+Create missing directories if required:
+•	docs/
+•	scripts/
+•	kubernetes/
+•	terraform/
+Populate them with production-ready placeholders where implementation belongs to later phases.
+________________________________________
+Phase 3 Technology Decisions
+Create ADRs documenting:
+•	LangGraph vs CrewAI vs AutoGen
+•	Qdrant vs Pinecone vs Milvus
+•	Redis vs Kafka
+•	FastAPI vs Flask
+•	Postgres vs SQLite
+•	OpenAI vs Anthropic
+•	GitHub Actions vs Azure DevOps
+Each ADR should include:
+•	Context
+•	Alternatives
+•	Tradeoffs
+•	Decision
+•	Consequences
+________________________________________
+Phase 4 Detailed Design Gaps
+Implement missing enterprise API capabilities.
+Authentication
+Implement:
+•	API Key authentication
+•	or HMAC webhook validation
+using FastAPI dependency injection.
+________________________________________
+Authorization
+Add authorization abstractions suitable for future RBAC.
+________________________________________
+Rate Limiting
+Implement production-grade rate limiting.
+Document design choices.
+________________________________________
+Trace Retrieval
+Complete trace retrieval architecture.
+Include:
+•	interfaces
+•	MCP integration
+•	retrieval abstraction
+•	tests
+________________________________________
+Phase 6 Multi-Agent Workflow
+Complete the LangGraph workflow.
+Implement:
+Execution Agent
+Responsibilities:
+•	generate remediation
+•	generate Kubernetes YAML
+•	generate Terraform patches
+•	generate GitHub-ready changes
+Include:
+•	prompts
+•	state updates
+•	tests
+•	documentation
+________________________________________
+Review Agent
+Implement Human-in-the-Loop approval.
+Support:
+•	approval
+•	rejection
+•	revision
+•	audit trail
+Integrate cleanly into the StateGraph.
+Update diagrams.
+Update state transitions.
+Update tests.
+________________________________________
+Phase 7 MCP Completion
+Complete remaining MCP servers.
+Implement:
+Filesystem MCP
+GitHub MCP
+Grafana MCP
+Terraform MCP
+Slack MCP
+Every MCP server must follow the official MCP specification.
+Each server should include:
+•	tools
+•	resources
+•	prompts
+•	validation
+•	structured errors
+•	authentication hooks
+•	documentation
+•	tests
+Do not duplicate shared logic.
+Create reusable MCP base abstractions where appropriate.
+________________________________________
+Phase 8 RAG Completion
+Complete enterprise-grade RAG.
+Implement:
+Cross Encoder Re-ranking
+Integrate after hybrid retrieval.
+Support configurable rerankers.
+________________________________________
+Citation Generation
+Every retrieved document should produce:
+•	source
+•	chunk id
+•	metadata
+•	relevance score
+Expose citations in agent outputs.
+________________________________________
+Confidence Scoring
+Produce calibrated confidence scores using:
+•	retrieval confidence
+•	reranker score
+•	LLM agreement
+•	evidence quality
+Expose confidence in final incident reports.
+________________________________________
+Hallucination Mitigation
+Strengthen guardrails by:
+•	evidence validation
+•	unsupported claim detection
+•	confidence thresholds
+•	abstention when evidence is insufficient
+________________________________________
+Security Improvements
+Implement:
+•	webhook authentication
+•	API authorization layer
+•	prompt injection defenses
+•	MCP permission boundaries
+•	structured input validation
+•	secret handling improvements
+•	audit logging hooks
+Maintain least privilege.
+________________________________________
+Documentation
+Update all documentation to reflect the new capabilities.
+Include:
+Architecture
+LangGraph workflow
+MCP servers
+RAG pipeline
+Security model
+Authentication
+Execution workflow
+Review workflow
+________________________________________
+Testing
+Every new capability must include:
+•	Unit tests
+•	Integration tests
+•	Mock MCP tests
+•	LangGraph workflow tests
+•	Authentication tests
+•	Authorization tests
+•	RAG tests
+•	Citation tests
+•	Confidence scoring tests
+•	Execution Agent tests
+•	Review Agent tests
+Maintain existing testing style.
+________________________________________
+Quality Requirements
+Every implementation must include:
+•	typed Python
+•	docstrings
+•	structured logging
+•	dependency injection
+•	SOLID
+•	Clean Architecture
+•	DDD consistency
+•	MyPy compliance
+•	Ruff compliance
+•	Black formatting
+•	Pydantic models
+•	comprehensive error handling
+________________________________________
+Deliverables
+For every completed gap provide:
+1.	Why the feature is required.
+2.	Architectural rationale.
+3.	Design alternatives considered.
+4.	Tradeoffs.
+5.	Production implementation.
+6.	Updated folder structure.
+7.	Updated Mermaid diagrams.
+8.	Production-quality code.
+9.	Tests.
+10.	Documentation.
+11.	Migration notes (if applicable).
+12.	Checklist verifying the corresponding audit finding has been fully resolved.
+________________________________________
+Completion Criteria
+Do not consider the sprint complete until every finding from the Phase 0–8 audit has been addressed.
+At the end, produce:
+1.	A Gap Closure Report mapping each audit finding to the implementation that resolves it.
+2.	An updated Phase 0–8 Compliance Matrix showing 100% completion or explicitly identifying any remaining justified exceptions.
+3.	A final Phase 9 Readiness Assessment, stating whether the repository is now ready to proceed to Infrastructure (Docker, Kubernetes, Terraform, Helm, and CI/CD).

@@ -81,4 +81,7 @@ def build_incident_graph() -> StateGraph:
     return workflow.compile(checkpointer=checkpointer, interrupt_before=["review_node"])
 
 
-incident_graph = build_incident_graph()
+# ident_graph = build_incident_graph()
+
+# Since the function already compiles the graph, we just need to assign it to 'app'!
+app = build_incident_graph()

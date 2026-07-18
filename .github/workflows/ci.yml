@@ -1,0 +1,49 @@
+name: AutoResolve CI/CD
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.12"
+          
+      - name: Install Poetry
+        run: pip install poetry
+        
+      - name: Install dependencies
+        run: poetry install
+        
+      - name: Static Analysis (Ruff & Black)
+        run: |
+          poetry run ruff check .
+          poetry run black --check .
+          
+      - name: Type Checking (MyPy)
+        run: poetry run mypy src/
+        
+      - name: Unit Tests
+        env:
+          KAFKA_BOOTSTRAP_SERVERS: "mock:9092"
+          POSTGRES_DSN: "postgresql://user:pass@localhost:5432/db"
+          QDRANT_URL: "http://localhost:6333"
+          ANTHROPIC_API_KEY: "mock-key"
+        run: poetry run pytest tests/
+
+  build-docker:
+    needs: lint-and-test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Docker Image
+        run: docker build -t ghcr.io/${{ github.repository }}/autoresolve:latest .

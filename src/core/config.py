@@ -36,6 +36,12 @@ class AutoResolveConfig(BaseSettings):
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
+    # ADDITION: Enforce topic consistency via centralized configuration
+    KAFKA_INCIDENTS_TOPIC: str = Field(
+        default="incidents", 
+        description="Topic for validated alerts"
+    )
+
 
 # Instantiate the config so other modules can import `settings`
 settings = AutoResolveConfig()

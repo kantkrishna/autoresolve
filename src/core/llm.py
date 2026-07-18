@@ -1,4 +1,5 @@
 # src/core/llm.py
+import os
 from langchain_litellm import ChatLiteLLM
 
 from src.core.config import settings
@@ -11,10 +12,13 @@ def get_agnostic_llm(temperature: float = 0.1) -> ChatLiteLLM:
     """
     if settings.LLM_BACKEND == "local":
         # Route to local Ollama instance
+        # Retrieve from ENV or fallback to Docker's host gateway
+        ollama_url = os.getenv("OLLAMA_BASE_URL", "http://host.docker.internal:11434")
+
         return ChatLiteLLM(
             model=settings.LOCAL_MODEL_NAME,
             temperature=temperature,
-            api_base="http://localhost:11434",  # Default Ollama local port
+            api_base=ollama_url,  # Default Ollama local port
             drop_params=True,  # Drops cloud-specific params to prevent crashes
             model_kwargs={"top_p": 0.9},
         )

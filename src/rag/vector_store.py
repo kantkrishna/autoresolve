@@ -6,6 +6,7 @@ from langchain_community.embeddings.fastembed import FastEmbedEmbeddings
 from langchain_core.documents import Document
 from langchain_qdrant import FastEmbedSparse, QdrantVectorStore, RetrievalMode
 from qdrant_client import QdrantClient, models
+from src.core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -19,9 +20,9 @@ sparse_embeddings = FastEmbedSparse(model_name="Qdrant/bm25")
 
 
 def get_qdrant_client() -> QdrantClient:
-    """Connect to the local Qdrant Docker container."""
-    return QdrantClient(url="http://localhost:6333")
-
+    """Connect to the Qdrant Docker container via config."""
+    # Note the str() cast here to satisfy Qdrant's SDK
+    return QdrantClient(url=str(settings.QDRANT_URL))
 
 def setup_collection() -> None:
     """Creates the Qdrant collection configured for Hybrid Search."""
