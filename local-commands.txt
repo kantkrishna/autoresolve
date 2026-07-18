@@ -24,6 +24,9 @@ http://localhost:3000
 # Validate the Docker Build (Dockerfile)
 docker build -t ghcr.io/autoresolve/autoresolve:latest .
 
+# Pull Qdrant vector DB
+docker pull qdrant/qdrant
+
 # Build docker containers in infra/docker-compose.yml
 docker compose -f infra/docker-compose.yml up -d
 # tear down the old state
@@ -35,5 +38,27 @@ docker compose -f infra/docker-compose.yml logs -f ai-worker
 # List all currently running Docker containers
 docker ps
 
-# Pull Qdrant vector DB
-docker pull qdrant/qdrant
+# Send a test alert payload to a local monitoring webhook. simulates a Prometheus
+# alert system sending a high-memory warning to a backend application 
+# 1. Define the header using the default key found in your auth.py
+# $headers = @{"X-API-KEY" = "dev-secret-key"}
+
+# 1. Define the payload
+$payload = @{
+    incident_id = "INC-001"
+    status = "firing"
+    alertname = "HighMemoryUsage"
+    description = "Memory usage is critical"
+    service = "payment-gateway"
+    severity = "critical"
+}
+
+# 2. Send the request
+Invoke-RestMethod -Uri http://localhost:8000/webhook/prometheus `
+    -Method Post `
+    -Headers @{"X-API-KEY" = "dev-secret-key"} `
+    -Body ($payload | ConvertTo-Json) `
+    -ContentType "application/json"
+
+# 3. 
+docker exec -it infra-ai-worker-1 python approve.py <Human-in-the-Loop approval Thread ID>

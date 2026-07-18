@@ -1,87 +1,101 @@
 # src/agents/graph.py
-from typing import Literal
-
-from langgraph.checkpoint.memory import MemorySaver
-from langgraph.graph import END, StateGraph
+import os
+from langgraph.graph import StateGraph, START, END
+from typing import TypedDict, Annotated, Sequence
+import operator
+from langchain_core.messages import BaseMessage
+import psycopg
+from psycopg.rows import dict_row
+from psycopg_pool import AsyncConnectionPool
+from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 
 from src.agents.nodes import (
-    investigation_node,
-    report_node,
-    resolution_node,
     triage_node,
+    investigation_node,
+    resolution_node,
+    execution_node,
+    review_node
 )
 
-# Import the new Phase 6 nodes
-from src.agents.nodes.execution import execution_node
-from src.agents.nodes.review import review_node, route_after_review
-from src.agents.state import IncidentState
+class AgentState(TypedDict):
+    messages: Annotated[Sequence[BaseMessage], operator.add]
+    incident_id: str
+    tracking_id: str
+    proposed_fix: str
 
+def build_incident_graph():
+    workflow = StateGraph(AgentState)
 
-def route_from_triage(
-    state: IncidentState,
-) -> Literal["investigation_node", "report_node"]:
-    """Conditional edge routing based on Triage Agent's decision."""
-    if state.get("next_step") == "SILENCE":
-        return "report_node"
-    return "investigation_node"
-
-
-def build_incident_graph() -> StateGraph:
-    """Compiles the agent nodes and edges into a deterministic state machine."""
-    workflow = StateGraph(IncidentState)
-
-    # 1. Register all nodes
+    # Define the nodes
     workflow.add_node("triage_node", triage_node)
     workflow.add_node("investigation_node", investigation_node)
     workflow.add_node("resolution_node", resolution_node)
-    workflow.add_node("execution_node", execution_node)  # <-- NEW
-    workflow.add_node("review_node", review_node)  # <-- NEW
-    workflow.add_node("report_node", report_node)
+    workflow.add_node("execution_node", execution_node)
+    workflow.add_node("review_node", review_node)
 
-    # 2. Set Entry Point
-    workflow.set_entry_point("triage_node")
-
-    # 3. Define Triage Routing
-    workflow.add_conditional_edges(
-        "triage_node",
-        route_from_triage,
-        {"investigation_node": "investigation_node", "report_node": "report_node"},
-    )
-
-    # 4. Define Linear Edges up to Execution
+    # Define the edges
+    workflow.add_edge(START, "triage_node")
+    workflow.add_edge("triage_node", "investigation_node")
     workflow.add_edge("investigation_node", "resolution_node")
-    workflow.add_edge("resolution_node", "execution_node")  # <-- Modified
-    workflow.add_edge("execution_node", "review_node")  # <-- NEW
+    workflow.add_edge("resolution_node", "review_node")
+    workflow.add_edge("review_node", "execution_node")
+    workflow.add_edge("execution_node", END)
 
-    # 5. Define HITL Review Routing
-    workflow.add_conditional_edges(
-        "review_node",
-        route_after_review,
-        {
-            # If approved, route to report_node (which will act as our deploy/notify
-            # step for now)
-            "deploy_node": "report_node",
-            # If revision requested, route back to execution to rewrite code
-            "execution_node": "execution_node",
-            # If rejected, end the graph
-            "__end__": END,
-        },
-    )
+    return workflow
 
-    # 6. Final Edge
-    workflow.add_edge("report_node", END)
+# ---------------------------------------------------------
+# Phase 10: Persistent Asynchronous PostgreSQL Checkpointing
+# ---------------------------------------------------------
+DB_URI = os.getenv(
+    "DATABASE_URL", 
+    "postgresql://postgres:postgres@postgres:5432/autoresolve"
+)
 
-    # This saves the graph's memory at every single step, allowing for
-    # Human-in-the-Loop pauses or resuming from a network crash.
-    checkpointer = MemorySaver()
+# 1. Run schema migrations synchronously to create tables safely if missing
+with psycopg.connect(DB_URI, autocommit=True) as schema_conn:
+    from langgraph.checkpoint.postgres import PostgresSaver
+    PostgresSaver(schema_conn).setup()
 
-    # CRITICAL ADDITION: interrupt_before=["review_node"]
-    # This instructs the orchestrator to physically pause execution BEFORE running the
-    # review_node.
-    return workflow.compile(checkpointer=checkpointer, interrupt_before=["review_node"])
+# 2. The Just-In-Time (JIT) Async Graph Runner
+# This defers asyncio-dependent instantiations until the event loop is actually running
+class AsyncGraphRunner:
+    def __init__(self):
+        self._app = None
+        self._pool = None
 
+    async def _init_app(self):
+        # Only initialize once, and only when called from within an active async loop
+        if self._app is None:
+            self._pool = AsyncConnectionPool(
+                conninfo=DB_URI,
+                max_size=10,
+                kwargs={"autocommit": True, "row_factory": dict_row}
+            )
+            await self._pool.open()
+            
+            # Now that we are inside the active loop, this will succeed!
+            checkpointer = AsyncPostgresSaver(self._pool)
+            
+            workflow = build_incident_graph()
+            self._app = workflow.compile(
+                checkpointer=checkpointer,
+                interrupt_before=["execution_node"]
+            )
 
-# ident_graph = build_incident_graph()
+    # Forward LangGraph asynchronous methods transparently
+    async def astream(self, *args, **kwargs):
+        await self._init_app()
+        async for chunk in self._app.astream(*args, **kwargs):
+            yield chunk
 
-# Since the function already compiles the graph, we just need to assign it to 'app'!
-app = build_incident_graph()
+    async def aget_state(self, *args, **kwargs):
+        await self._init_app()
+        return await self._app.aget_state(*args, **kwargs)
+
+    async def aupdate_state(self, *args, **kwargs):
+        await self._init_app()
+        return await self._app.aupdate_state(*args, **kwargs)
+
+# Export the JIT wrapper seamlessly as 'app'
+# This requires zero changes to worker.py or approve.py!
+app = AsyncGraphRunner()
