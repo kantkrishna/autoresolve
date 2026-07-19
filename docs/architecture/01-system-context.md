@@ -10,17 +10,17 @@ via GitHub.
 
 ```mermaid
 graph TD
-    # Internal Entities
+    %% Internal Entities
     P[Prometheus / AlertManager]
     AR((AutoResolve System))
     
-    # External Entities
+    %% External Entities
     S[Slack / Teams]
     G[GitHub]
     K[Kubernetes Cluster]
     LLM[OpenAI / Anthropic API]
 
-    # Relationships
+    %% Relationships
     P -- "1. Fires Webhook Alert" --> AR
     AR -- "2. Notifies On-Call" --> S
     AR -- "3. Fetches Context & Logs via MCP" --> K
