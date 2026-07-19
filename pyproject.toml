@@ -80,5 +80,11 @@ disallow_untyped_defs = false
 asyncio_mode = "strict"
 filterwarnings = [
     "ignore:.*langchain_community.*",
-    "ignore:.*starlette.testclient.*"
+    "ignore:.*starlette.testclient.*",
+]
+minversion = "7.0"
+addopts = "-ra -q"
+testpaths = ["tests"]
+markers = [
+    "security: Infrastructure compliance and adversarial injection test execution ring."
 ]

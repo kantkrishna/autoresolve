@@ -2,19 +2,27 @@ import pytest
 from pydantic import ValidationError
 
 from src.api.schemas import PrometheusAlert
+from src.core.config import settings
 from src.core.llm import get_agnostic_llm
 
 
 def test_litellm_configuration() -> None:
     """Ensure the LLM router defaults or respects environment configuration."""
+    from src.core.config import settings
+    from src.core.llm import get_agnostic_llm
     llm = get_agnostic_llm()
-    # It should either be the OpenAI default or custom Qwen.
-    assert llm.model in [
+    
+    # CRITICAL FIX: Remove the hardcoded f"ollama/" prefix. 
+    # The settings.LOCAL_MODEL_NAME already contains the full valid string.
+    valid_models = [
         "openai/gpt-4o-mini",
         "openai/gpt-5-nano",
         "openai/gpt-5.4-nano",
-        "ollama/qwen2.5-coder:3b",
+        settings.LOCAL_MODEL_NAME,  
     ]
+    
+    # Assert that the active model string exists within our valid models list
+    assert llm.model in valid_models, f"Model {llm.model} not in recognized enterprise matrix."
 
 
 def test_alert_prompt_injection_guardrail():

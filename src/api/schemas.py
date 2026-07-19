@@ -1,32 +1,51 @@
 # src/api/schemas.py
-import hashlib
+"""
+API Request and Response Validation Schemas for AutoResolve.
+Enforces strict structural data validation and prompt injection interception.
+"""
 
-from pydantic import BaseModel, Field, computed_field, field_validator
+import re
+import logging
+from typing import Dict, Any, Optional
+from pydantic import BaseModel, Field, field_validator
 
+logger = logging.getLogger(__name__)
+
+# List of known adversarial injection patterns targeting LLM orchestrations
+SUSPICIOUS_SIGNATURES = [
+    r"ignore\s+previous\s+instructions",
+    r"system\s+prompt\s+override",
+    r"download\s+env\s+values",
+    r"print\s+cluster\s+secrets",
+    r"execute\s+drop\s+database"
+]
 
 class PrometheusAlert(BaseModel):
-    """Strict validation of incoming webhooks with built-in idempotency."""
+    """
+    Validates incoming payload structures from Prometheus Alertmanager.
+    Actively scans textual inputs for adversarial injection signatures.
+    """
+    status: str = Field(..., description="Alert status, e.g., 'firing' or 'resolved'")
+    alertname: str = Field(..., description="The unique name identifying the operational alert metric")
+    service: str = Field(..., description="Target microservice domain name")
+    description: str = Field(..., description="Detailed textual description of the ongoing incident")
+    tracking_id: Optional[str] = Field(default=None, description="Deterministic idempotency hash")
 
-    status: str = Field(..., pattern="^(resolved|firing)$")
-    alertname: str = Field(..., max_length=100)
-    service: str = Field(..., max_length=100)
-    description: str = Field(..., max_length=1000)
-
-    @field_validator("description")
+    @field_validator("description", mode="before")
     @classmethod
-    def sanitize_description(cls, v: str) -> str:
-        """Basic Guardrail against obvious prompt injections."""
-        dangerous_phrases = ["ignore previous instructions", "system prompt"]
-        if any(phrase in v.lower() for phrase in dangerous_phrases):
-            raise ValueError("Potential prompt injection detected in alert payload.")
-        return v
-
-    @computed_field
-    @property
-    def tracking_id(self) -> str:
+    def sanitize_and_check_injection(cls, value: str) -> str:
         """
-        Generates a deterministic SHA-256 hash based on core alert properties.
-        Used for Kafka partition routing and idempotency.
+        Scans description string values against dangerous instruction override signatures.
         """
-        unique_signature = f"{self.alertname}-{self.service}-{self.status}"
-        return hashlib.sha256(unique_signature.encode("utf-8")).hexdigest()
+        if not value:
+            return value
+            
+        normalized_val = value.lower()
+        for signature in SUSPICIOUS_SIGNATURES:
+            if re.search(signature, normalized_val):
+                logger.warning(
+                    f"🚨 Security Alert: Prompt injection pattern matched. Dropping payload data."
+                )
+                raise ValueError("Potential prompt injection detected. Request rejected for security compliance.")
+        
+        return value

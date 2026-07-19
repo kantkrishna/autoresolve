@@ -38,7 +38,7 @@ graph TD
         QD[(Qdrant Vector DB)]
     end
 
-    # Data Flow
+    %% Data Flow
     Prometheus -->|Webhook| FA
     FA -->|Publish Alert Event| K
     K -->|Consume Event| LG
