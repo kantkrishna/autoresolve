@@ -1,6 +1,6 @@
-# This sequence diagram illustrates how the validation harness tests the intercept
-# paths of malicious payloads, ensuring they are scrubbed or rejected before hitting
-# the core execution layers.
+This sequence diagram illustrates how the validation harness tests the intercept
+paths of malicious payloads, ensuring they are scrubbed or rejected before hitting
+the core execution layers.
 
 ```mermaid
 sequenceDiagram

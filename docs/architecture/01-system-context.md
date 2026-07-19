@@ -1,12 +1,12 @@
 # AutoResolve System Context Diagram (Level 1)
 
-# This diagram maps to the C4 modeling approach established the Architecture.
-# It serves as the high-level Level 1 System Context Diagram, demonstrating
-# exactly how AutoResolve fits into the broader enterprise ecosystem. It
-# accurately captures the essential trust boundaries and integration points
-# defined, including alert ingestion from Prometheus, context gathering from
-# Kubernetes via MCP, reasoning via the LLM API, and remediation execution
-# via GitHub.
+This diagram maps to the C4 modeling approach established the Architecture.
+It serves as the high-level Level 1 System Context Diagram, demonstrating
+exactly how AutoResolve fits into the broader enterprise ecosystem. It
+accurately captures the essential trust boundaries and integration points
+defined, including alert ingestion from Prometheus, context gathering from
+Kubernetes via MCP, reasoning via the LLM API, and remediation execution
+via GitHub.
 
 ```mermaid
 graph TD

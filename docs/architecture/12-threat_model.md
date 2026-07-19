@@ -1,4 +1,3 @@
-```markdown
 # Enterprise Threat Model (STRIDE)
 
 | Threat Type | Description | Mitigation Strategy |

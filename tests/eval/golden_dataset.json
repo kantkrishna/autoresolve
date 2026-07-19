@@ -1,0 +1,26 @@
+[
+  {
+    "incident_id": "MOCK-OOM-001",
+    "alert_payload": {
+      "status": "firing",
+      "alertname": "HighMemoryUsage",
+      "service": "payment-gateway",
+      "description": "Pod payment-gateway-pod-xyz memory usage is at 99%. OOMKilled imminent."
+    },
+    "expected_severity": "CRITICAL",
+    "expected_remediation_keyword": "2Gi",
+    "must_use_tool": "get_pod_logs"
+  },
+  {
+    "incident_id": "MOCK-CPU-002",
+    "alert_payload": {
+      "status": "firing",
+      "alertname": "CPUThrottlingHigh",
+      "service": "auth-service",
+      "description": "Container CPU throttling exceeds 20%."
+    },
+    "expected_severity": "WARNING",
+    "expected_remediation_keyword": "limits",
+    "must_use_tool": "query_cpu_metrics"
+  }
+]
