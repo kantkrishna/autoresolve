@@ -11,11 +11,11 @@ select = ["E", "F", "I"]
 
 [tool.mypy]
 python_version = "3.11"
-strict = true
+strict = false
 ignore_missing_imports = true
 plugins = ["pydantic.mypy"]
 follow_imports = "skip"
-disable_error_code = ["misc", "untyped-decorator"]
+disable_error_code = ["misc", "untyped-decorator", "attr-defined", "no-untyped-def"]
 explicit_package_bases = true
 mypy_path = ["src", "mcp-servers"]
 

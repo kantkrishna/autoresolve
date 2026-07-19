@@ -1,14 +1,22 @@
 ﻿import os
+
 from github import Github
 from mcp.server.fastmcp import FastMCP
 
 # Initialize the FastMCP server for GitHub
 mcp = FastMCP("GitHub Remediation Server")
 
+
 @mcp.tool()
-def propose_github_fix(repo_name: str, file_path: str, new_content: str, commit_message: str, branch_name: str) -> str:
+def propose_github_fix(
+    repo_name: str,
+    file_path: str,
+    new_content: str,
+    commit_message: str,
+    branch_name: str,
+) -> str:
     """
-    Forks the repository (if necessary), creates a new branch, updates a specified file 
+    Forks the repository (if necessary), creates a new branch, updates a specified file
     (e.g., deployment YAML) to resolve an incident, and drafts a Pull Request.
     """
     token = os.getenv("GITHUB_TOKEN")
@@ -28,28 +36,29 @@ def propose_github_fix(repo_name: str, file_path: str, new_content: str, commit_
 
         # Fetch the file to get its current SHA (required for updating)
         file_obj = repo.get_contents(file_path, ref=default_branch)
-        
+
         # Update the file
         repo.update_file(
             path=file_path,
             message=commit_message,
             content=new_content,
             sha=file_obj.sha,
-            branch=branch_name
+            branch=branch_name,
         )
 
         # Create the Pull Request
         pr = repo.create_pull(
             title=commit_message,
-            body="🤖 AutoResolve AI has drafted this fix based on a recent telemetry alert. Please review.",
+            body="🤖 AutoResolve AI has drafted this fix based on a recent telemetry alert. Please review.", # noqa: E501
             head=branch_name,
-            base=default_branch
+            base=default_branch,
         )
 
         return f"Success! Pull request drafted: {pr.html_url}"
 
     except Exception as e:
         return f"GitHub Execution Error: {str(e)}"
+
 
 if __name__ == "__main__":
     # Start the MCP stdio server

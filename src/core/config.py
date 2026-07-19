@@ -38,8 +38,7 @@ class AutoResolveConfig(BaseSettings):
 
     # ADDITION: Enforce topic consistency via centralized configuration
     KAFKA_INCIDENTS_TOPIC: str = Field(
-        default="incidents", 
-        description="Topic for validated alerts"
+        default="incidents", description="Topic for validated alerts"
     )
 
 

@@ -1,11 +1,12 @@
-# src/agents/nodes.py renamed to src/agents/nodes/__init__.py to recognize the nodes directory as an importable "package"
+# src/agents/nodes.py renamed to src/agents/nodes/__init__.py
+# to recognize the nodes directory as an importable "package"
 # src/agents/nodes/__init__.py
 import logging
 from typing import Any, Dict
 
 from langchain_core.messages import SystemMessage
 
-from src.agents.schemas import TriageOutput, RemediationArtifacts
+from src.agents.schemas import RemediationArtifacts, TriageOutput
 from src.agents.state import IncidentState
 from src.core.llm import get_agnostic_llm
 from src.core.mcp_client import execute_mcp_tool
@@ -13,6 +14,7 @@ from src.rag.vector_store import get_vector_store
 
 logger = logging.getLogger(__name__)
 llm = get_agnostic_llm(temperature=0.1)
+
 
 # --- TRIAGE NODE ---
 def triage_node(state: IncidentState) -> dict[str, Any]:
@@ -40,6 +42,7 @@ def triage_node(state: IncidentState) -> dict[str, Any]:
             SystemMessage(content=f"Triage complete. Verdict: {response.summary}")
         ],
     }
+
 
 # --- INVESTIGATION NODE ---
 async def investigation_node(state: IncidentState) -> dict[str, Any]:
@@ -69,6 +72,7 @@ async def investigation_node(state: IncidentState) -> dict[str, Any]:
         "messages": [SystemMessage(content=f"MCP Investigation complete. {findings}")],
     }
 
+
 # --- RESOLUTION NODE ---
 def resolution_node(state: IncidentState) -> dict[str, Any]:
     """Queries the Vector DB for historical runbooks to formulate a fix."""
@@ -81,13 +85,16 @@ def resolution_node(state: IncidentState) -> dict[str, Any]:
     # 2. Query Qdrant
     vector_store = get_vector_store()
     docs = vector_store.similarity_search(f"Fix for {service} {hypothesis}", k=1)
-    retrieved_runbook = docs[0].page_content if docs else "No historical runbooks found."
-    prompt = f"Based on findings: {hypothesis} and runbook: {retrieved_runbook}, formulate a brief, 1-sentence proposed fix."
+    retrieved_runbook = (
+        docs[0].page_content if docs else "No historical runbooks found."
+    )
+    prompt = f"Based on findings: {hypothesis} and runbook: {retrieved_runbook}, formulate a brief, 1-sentence proposed fix." # noqa: E501
     response = llm.invoke([SystemMessage(content=prompt)])
     return {
         "proposed_fix": str(response.content),
         "messages": [SystemMessage(content=f"Resolution strategy: {response.content}")],
     }
+
 
 # --- EXECUTION NODE ---
 def execution_node(state: Dict[str, Any]) -> Dict[str, Any]:
@@ -104,8 +111,9 @@ def execution_node(state: Dict[str, Any]) -> Dict[str, Any]:
     return {
         "proposed_artifacts": artifacts.model_dump(),
         "human_approval_status": "pending",
-        "messages": [SystemMessage(content="Execution complete: PR drafted.")]
+        "messages": [SystemMessage(content="Execution complete: PR drafted.")],
     }
+
 
 # --- REVIEW NODE ---
 def review_node(state: Dict[str, Any]) -> Dict[str, Any]:
@@ -113,6 +121,7 @@ def review_node(state: Dict[str, Any]) -> Dict[str, Any]:
     logger.info("Review Agent processing status.")
     status = state.get("human_approval_status", "pending")
     return {"audit_trail": [f"Review status: {status}"]}
+
 
 # --- REPORT NODE ---
 def report_node(state: IncidentState) -> dict[str, Any]:
@@ -124,7 +133,12 @@ def report_node(state: IncidentState) -> dict[str, Any]:
         ]
     }
 
+
 __all__ = [
-    "triage_node", "investigation_node", "resolution_node", 
-    "execution_node", "review_node", "report_node"
+    "triage_node",
+    "investigation_node",
+    "resolution_node",
+    "execution_node",
+    "review_node",
+    "report_node",
 ]

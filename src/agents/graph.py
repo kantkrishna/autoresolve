@@ -57,23 +57,21 @@ with psycopg.connect(DB_URI, autocommit=True) as schema_conn:
     PostgresSaver(schema_conn).setup()
 
 # 2. The Just-In-Time (JIT) Async Graph Runner
-# This defers asyncio-dependent instantiations until the event loop is actually running
 class AsyncGraphRunner:
     def __init__(self):
         self._app = None
         self._pool = None
 
     async def _init_app(self):
-        # Only initialize once, and only when called from within an active async loop
         if self._app is None:
             self._pool = AsyncConnectionPool(
                 conninfo=DB_URI,
                 max_size=10,
+                open=False,
                 kwargs={"autocommit": True, "row_factory": dict_row}
             )
             await self._pool.open()
             
-            # Now that we are inside the active loop, this will succeed!
             checkpointer = AsyncPostgresSaver(self._pool)
             
             workflow = build_incident_graph()
@@ -81,6 +79,13 @@ class AsyncGraphRunner:
                 checkpointer=checkpointer,
                 interrupt_before=["execution_node"]
             )
+
+    async def close(self):
+        """Gracefully drains and closes the database connection pool."""
+        if self._pool is not None:
+            await self._pool.close()
+            self._pool = None
+            self._app = None
 
     # Forward LangGraph asynchronous methods transparently
     async def astream(self, *args, **kwargs):
@@ -97,5 +102,4 @@ class AsyncGraphRunner:
         return await self._app.aupdate_state(*args, **kwargs)
 
 # Export the JIT wrapper seamlessly as 'app'
-# This requires zero changes to worker.py or approve.py!
 app = AsyncGraphRunner()

@@ -1,19 +1,39 @@
+# src/agents/approve.py
+import asyncio
 import sys
-from src.agents.graph import app as agent_app
+from src.agents.graph import app
 
-def approve_fix(thread_id: str):
-    print(f"👍 Human SRE Approved the fix for Incident: {thread_id}")
-    thread_config = {"configurable": {"thread_id": thread_id}}
+async def approve_execution(incident_id: str):
+    config = {"configurable": {"thread_id": incident_id}}
     
-    # Passing 'None' to invoke tells LangGraph to resume exactly where it paused!
-    for event in agent_app.stream(None, config=thread_config):
-        for node_name, node_state in event.items():
-            print(f"🚀 Resumed and Completed Node: [{node_name}]")
+    try:
+        # 1. Query PostgreSQL asynchronously for the state of this thread
+        state = await app.get_state(config)
+        
+        if not state.next:
+            print(f"❌ Incident {incident_id} has no pending interruptions.")
+            print("It either finished executing or hasn't reached the execution node yet.")
+            return
             
-    print("✅ Incident Fully Resolved and Closed!")
+        print(f"✅ Found paused graph for {incident_id}.")
+        print(f"⏸️  Paused right before executing: {state.next}")
+        print("🚀 Human Approval received. Resuming execution and triggering GitHub MCP...\n")
+        
+        # 2. Resume the graph asynchronously
+        async for output in app.astream(None, config):
+            for key, value in output.items():
+                print(f"Finished node: {key}")
+                
+        print("\n🎉 Execution complete! Check your GitHub repository for the drafted Pull Request.")
+    
+    finally:
+        # Guarantee pool cleanup to prevent trailing connection logs
+        await app.close()
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Usage: poetry run python -m src.agents.approve <THREAD_ID>")
+        print("Usage: python approve.py <INCIDENT_ID>")
         sys.exit(1)
-    approve_fix(sys.argv[1])
+        
+    incident_id = sys.argv[1]
+    asyncio.run(approve_execution(incident_id))
