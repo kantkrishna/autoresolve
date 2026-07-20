@@ -2,7 +2,6 @@
 import pytest
 
 from src.agents.graph import build_incident_graph
-from src.agents.state import IncidentState
 
 
 def test_graph_compilation() -> None:

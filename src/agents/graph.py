@@ -1,27 +1,30 @@
 # src/agents/graph.py
-import os
-from langgraph.graph import StateGraph, START, END
-from typing import TypedDict, Annotated, Sequence
 import operator
-from langchain_core.messages import BaseMessage
+import os
+from typing import Annotated, Sequence, TypedDict
+
 import psycopg
+from langchain_core.messages import BaseMessage
+from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
+from langgraph.graph import END, START, StateGraph
 from psycopg.rows import dict_row
 from psycopg_pool import AsyncConnectionPool
-from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 
 from src.agents.nodes import (
-    triage_node,
+    execution_node,
     investigation_node,
     resolution_node,
-    execution_node,
-    review_node
+    review_node,
+    triage_node,
 )
+
 
 class AgentState(TypedDict):
     messages: Annotated[Sequence[BaseMessage], operator.add]
     incident_id: str
     tracking_id: str
     proposed_fix: str
+
 
 def build_incident_graph():
     workflow = StateGraph(AgentState)
@@ -43,18 +46,20 @@ def build_incident_graph():
 
     return workflow
 
+
 # ---------------------------------------------------------
 # Phase 10: Persistent Asynchronous PostgreSQL Checkpointing
 # ---------------------------------------------------------
 DB_URI = os.getenv(
-    "DATABASE_URL", 
-    "postgresql://postgres:postgres@postgres:5432/autoresolve"
+    "DATABASE_URL", "postgresql://postgres:postgres@postgres:5432/autoresolve"
 )
 
 # 1. Run schema migrations synchronously to create tables safely if missing
 with psycopg.connect(DB_URI, autocommit=True) as schema_conn:
     from langgraph.checkpoint.postgres import PostgresSaver
+
     PostgresSaver(schema_conn).setup()
+
 
 # 2. The Just-In-Time (JIT) Async Graph Runner
 class AsyncGraphRunner:
@@ -68,16 +73,15 @@ class AsyncGraphRunner:
                 conninfo=DB_URI,
                 max_size=10,
                 open=False,
-                kwargs={"autocommit": True, "row_factory": dict_row}
+                kwargs={"autocommit": True, "row_factory": dict_row},
             )
             await self._pool.open()
-            
+
             checkpointer = AsyncPostgresSaver(self._pool)
-            
+
             workflow = build_incident_graph()
             self._app = workflow.compile(
-                checkpointer=checkpointer,
-                interrupt_before=["execution_node"]
+                checkpointer=checkpointer, interrupt_before=["execution_node"]
             )
 
     async def close(self):
@@ -100,6 +104,7 @@ class AsyncGraphRunner:
     async def aupdate_state(self, *args, **kwargs):
         await self._init_app()
         return await self._app.aupdate_state(*args, **kwargs)
+
 
 # Export the JIT wrapper seamlessly as 'app'
 app = AsyncGraphRunner()

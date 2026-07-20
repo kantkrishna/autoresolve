@@ -28,6 +28,7 @@ sys.modules["langgraph.checkpoint.postgres.aio"] = MagicMock()
 # 4. Safely intercept top-level connection factories on the real driver
 try:
     import psycopg
+
     psycopg.connect = MagicMock()
 except ImportError:
     pass

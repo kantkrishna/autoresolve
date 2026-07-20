@@ -88,7 +88,7 @@ def resolution_node(state: IncidentState) -> dict[str, Any]:
     retrieved_runbook = (
         docs[0].page_content if docs else "No historical runbooks found."
     )
-    prompt = f"Based on findings: {hypothesis} and runbook: {retrieved_runbook}, formulate a brief, 1-sentence proposed fix." # noqa: E501
+    prompt = f"Based on findings: {hypothesis} and runbook: {retrieved_runbook}, formulate a brief, 1-sentence proposed fix."  # noqa: E501
     response = llm.invoke([SystemMessage(content=prompt)])
     return {
         "proposed_fix": str(response.content),

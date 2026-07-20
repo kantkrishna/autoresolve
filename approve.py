@@ -27,7 +27,7 @@ async def approve_execution(incident_id: str):
             print(f"Finished node: {key}")
 
     print(
-        "\n🎉 Execution complete! Check your GitHub repository for the drafted Pull Request." # noqa: E501
+        "\n🎉 Execution complete! Check your GitHub repository for the drafted Pull Request."  # noqa: E501
     )
 
 

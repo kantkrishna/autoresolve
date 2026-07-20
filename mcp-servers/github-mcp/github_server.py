@@ -49,7 +49,7 @@ def propose_github_fix(
         # Create the Pull Request
         pr = repo.create_pull(
             title=commit_message,
-            body="🤖 AutoResolve AI has drafted this fix based on a recent telemetry alert. Please review.", # noqa: E501
+            body="🤖 AutoResolve AI has drafted this fix based on a recent telemetry alert. Please review.",  # noqa: E501
             head=branch_name,
             base=default_branch,
         )

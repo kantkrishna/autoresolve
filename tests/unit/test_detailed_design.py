@@ -8,21 +8,22 @@ from src.core.llm import get_agnostic_llm
 
 def test_litellm_configuration() -> None:
     """Ensure the LLM router defaults or respects environment configuration."""
-    from src.core.config import settings
-    from src.core.llm import get_agnostic_llm
+
     llm = get_agnostic_llm()
-    
-    # CRITICAL FIX: Remove the hardcoded f"ollama/" prefix. 
+
+    # CRITICAL FIX: Remove the hardcoded f"ollama/" prefix.
     # The settings.LOCAL_MODEL_NAME already contains the full valid string.
     valid_models = [
         "openai/gpt-4o-mini",
         "openai/gpt-5-nano",
         "openai/gpt-5.4-nano",
-        settings.LOCAL_MODEL_NAME,  
+        settings.LOCAL_MODEL_NAME,
     ]
-    
+
     # Assert that the active model string exists within our valid models list
-    assert llm.model in valid_models, f"Model {llm.model} not in recognized enterprise matrix."
+    assert (
+        llm.model in valid_models
+    ), f"Model {llm.model} not in recognized enterprise matrix."
 
 
 def test_alert_prompt_injection_guardrail():
