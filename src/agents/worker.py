@@ -29,7 +29,7 @@ async def consume_alerts():
 
     await consumer.start()
     logger.info(
-        f"🟢 AI Worker successfully connected to Kafka. Listening for alerts on topic '{topic_name}'..." # noqa: E501
+        f"🟢 AI Worker successfully connected to Kafka. Listening for alerts on topic '{topic_name}'..."  # noqa: E501
     )
 
     try:
@@ -86,14 +86,12 @@ async def consume_alerts():
                 ):
                     for node_name, _ in event.items():
                         logger.info(
-                            f"💾 Node '{node_name}' finished executing state update sequence." # noqa: E501
+                            f"💾 Node '{node_name}' finished executing state update sequence."  # noqa: E501
                         )
 
+                logger.info("⏸️  GRAPH PAUSED. Next node in queue: ('execution_node',)")
                 logger.info(
-                    "⏸️  GRAPH PAUSED. Next node in queue: ('execution_node',)"
-                )
-                logger.info(
-                    f"👨‍💻 Waiting for Human-in-the-Loop approval for Thread: {thread_id}" # noqa: E501
+                    f"👨‍💻 Waiting for Human-in-the-Loop approval for Thread: {thread_id}"  # noqa: E501
                 )
 
             except Exception as e:

@@ -22,7 +22,7 @@ async def approve_execution(incident_id: str):
         print(f"✅ Found paused graph for {incident_id}.")
         print(f"⏸️  Paused right before executing: {state.next}")
         print(
-            "🚀 Human Approval received. Resuming execution and triggering GitHub MCP...\n" # noqa: E501
+            "🚀 Human Approval received. Resuming execution and triggering GitHub MCP...\n"  # noqa: E501
         )
 
         # 2. Resume the graph asynchronously
@@ -31,7 +31,7 @@ async def approve_execution(incident_id: str):
                 print(f"Finished node: {key}")
 
         print(
-            "\n🎉 Execution complete! Check your GitHub repository for the drafted Pull Request." # noqa: E501
+            "\n🎉 Execution complete! Check your GitHub repository for the drafted Pull Request."  # noqa: E501
         )
 
     finally:

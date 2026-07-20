@@ -52,7 +52,7 @@ class TestSecurityComplianceAndAdversarialVectors:
         corporate emails, IPs, and internal metadata.
         """
         scrubber = PIIScrubber()
-        raw_log = "Exception at runtime. Contact core-admin@stripe-internal.net from node 192.168.10.45." # noqa: E501
+        raw_log = "Exception at runtime. Contact core-admin@stripe-internal.net from node 192.168.10.45."  # noqa: E501
 
         scrubbed = scrubber._regex_fallback_scrub(raw_log)
 

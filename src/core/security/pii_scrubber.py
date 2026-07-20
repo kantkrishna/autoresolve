@@ -53,7 +53,7 @@ class PIIScrubber:
             return anonymized.text
         except Exception as e:
             logger.error(
-                f"Failed to scrub PII from payload. Dropping payload for safety. Error: {e}" # noqa: E501
+                f"Failed to scrub PII from payload. Dropping payload for safety. Error: {e}"  # noqa: E501
             )
             return "[REDACTED DUE TO SCRUBBER FAILURE]"
 

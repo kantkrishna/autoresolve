@@ -54,10 +54,10 @@ class PrometheusAlert(BaseModel):
         for signature in SUSPICIOUS_SIGNATURES:
             if re.search(signature, normalized_val):
                 logger.warning(
-                    "🚨 Security Alert: Prompt injection pattern matched. Dropping payload data." # noqa: E501
+                    "🚨 Security Alert: Prompt injection pattern matched. Dropping payload data."  # noqa: E501
                 )
                 raise ValueError(
-                    "Potential prompt injection detected. Request rejected for security compliance." # noqa: E501
+                    "Potential prompt injection detected. Request rejected for security compliance."  # noqa: E501
                 )
 
         return value

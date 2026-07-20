@@ -62,3 +62,25 @@ Invoke-RestMethod -Uri http://localhost:8000/webhook/prometheus `
 
 # 3. 
 docker exec -it infra-ai-worker-1 python approve.py <Human-in-the-Loop approval Thread ID>
+
+# Observe the OpenTelemetry and Prometheus implementations locally
+# 1. Start the FastAPI server locally
+poetry run uvicorn src.api.main:app --reload --port 8000
+
+#2. Mock alert payload script
+$Headers = @{
+    "X-API-Key" = "dev-secret-key" # Or whatever your local env uses
+    "Content-Type" = "application/json"
+}
+
+$Payload = @{
+    status = "firing"
+    alertname = "HighCPUUsage"
+    service = "payment-gateway"
+    description = "Observability manual test"
+}
+
+Invoke-RestMethod -Uri "http://localhost:8001/webhook/prometheus" -Method Post -Headers $Headers -Body ($Payload | ConvertTo-Json) | ConvertTo-Json
+
+# 3. Open your web browser and navigate to:
+http://localhost:8001/metrics
