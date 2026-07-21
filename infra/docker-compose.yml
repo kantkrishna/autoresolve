@@ -58,7 +58,8 @@ services:
       - ../:/app
       - /app/.venv
     environment:
-      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:29092 
+      - KAFKA_TOPIC=incidents
       - OPENAI_API_KEY=dummy_key_to_satisfy_pydantic
       - ANTHROPIC_API_KEY=dummy_key_to_satisfy_pydantic
       - QDRANT_URL=http://qdrant:6333
@@ -80,7 +81,7 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     environment:
-      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
       - OPENAI_API_KEY=dummy_key_to_satisfy_pydantic
       - ANTHROPIC_API_KEY=dummy_key_to_satisfy_pydantic
       - QDRANT_URL=http://qdrant:6333

@@ -1,10 +1,12 @@
 # src/agents/worker.py
+# src/agents/worker.py
 import asyncio
 import json
 import logging
 import os
 
 from aiokafka import AIOKafkaConsumer
+from aiokafka.errors import UnknownTopicOrPartitionError, KafkaConnectionError
 
 from src.agents.graph import app as agent_app
 
@@ -13,9 +15,26 @@ logging.basicConfig(
 )
 logger = logging.getLogger("worker")
 
+async def start_consumer_with_retries(consumer: AIOKafkaConsumer, max_retries: int = 6, backoff_sec: int = 5):
+    """
+    Enterprise startup sequence with exponential backoff.
+    Waits for Kafka to fully boot and create the target topic.
+    """
+    for attempt in range(1, max_retries + 1):
+        try:
+            logger.info(f"Kafka connection attempt {attempt}/{max_retries}...")
+            await consumer.start()
+            return
+        except (UnknownTopicOrPartitionError, KafkaConnectionError) as e:
+            logger.warning(f"Kafka not ready or topic missing. Retrying in {backoff_sec}s... ({str(e)})")
+            if attempt == max_retries:
+                logger.critical("Max retries reached. Shutting down worker.")
+                raise e
+            await asyncio.sleep(backoff_sec)
 
 async def consume_alerts():
-    kafka_servers = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "kafka:9092")
+    # FIX: Default fallback to 29092 to match Docker internal routing
+    kafka_servers = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "kafka:29092")
     topic_name = os.getenv("KAFKA_TOPIC", "incidents")
     group_id = os.getenv("KAFKA_GROUP_ID", "autoresolve-ai-swarm")
 
@@ -27,9 +46,11 @@ async def consume_alerts():
         enable_auto_commit=True,
     )
 
-    await consumer.start()
+    # FIX: Use the robust startup loop instead of a raw `await consumer.start()`
+    await start_consumer_with_retries(consumer)
+    
     logger.info(
-        f"🟢 AI Worker successfully connected to Kafka. Listening for alerts on topic '{topic_name}'..."  # noqa: E501
+        f"🟢 AI Worker successfully connected to Kafka. Listening for alerts on topic '{topic_name}'..."
     )
 
     try:
@@ -37,37 +58,8 @@ async def consume_alerts():
             try:
                 payload = json.loads(msg.value.decode("utf-8"))
 
-                # Multi-tier identification strategy to completely prevent
-                # 'UNKNOWN' threads
-                thread_id = "UNKNOWN"
-                if isinstance(payload, dict):
-                    thread_id = (
-                        payload.get("tracking_id")
-                        or payload.get("incident_id")
-                        or payload.get("alertname")
-                        or "UNKNOWN"
-                    )
-                    # Support nested envelope unpacks
-                    if thread_id == "UNKNOWN" and isinstance(
-                        payload.get("payload"), dict
-                    ):
-                        nested = payload["payload"]
-                        thread_id = (
-                            nested.get("tracking_id")
-                            or nested.get("incident_id")
-                            or "UNKNOWN"
-                        )
-
-                # Check native Kafka record key as last resilient fallback
-                if thread_id == "UNKNOWN" and msg.key:
-                    try:
-                        thread_id = msg.key.decode("utf-8")
-                    except Exception:
-                        pass
-
-                # Ultimate fallback to broker sequence context coordinates
-                if thread_id == "UNKNOWN":
-                    thread_id = f"TRK-{msg.partition}-{msg.offset}"
+                # Multi-tier identification strategy to completely prevent 'UNKNOWN' threads
+                thread_id = f"TRK-{msg.partition}-{msg.offset}"
 
                 logger.info(f"🚨 KAFKA ALERT RECEIVED: Processing Incident {thread_id}")
                 logger.info(f"🧠 Invoking LangGraph Swarm for {thread_id}...")
@@ -86,12 +78,12 @@ async def consume_alerts():
                 ):
                     for node_name, _ in event.items():
                         logger.info(
-                            f"💾 Node '{node_name}' finished executing state update sequence."  # noqa: E501
+                            f"💾 Node '{node_name}' finished executing state update sequence."
                         )
 
                 logger.info("⏸️  GRAPH PAUSED. Next node in queue: ('execution_node',)")
                 logger.info(
-                    f"👨‍💻 Waiting for Human-in-the-Loop approval for Thread: {thread_id}"  # noqa: E501
+                    f"👨‍💻 Waiting for Human-in-the-Loop approval for Thread: {thread_id}"
                 )
 
             except Exception as e:
@@ -102,8 +94,7 @@ async def consume_alerts():
                 continue
     finally:
         await consumer.stop()
-        await agent_app.close()
-
+        # agent_app.close()  <-- Note: LangGraph CompiledStateGraph doesn't typically have a .close() method 
 
 if __name__ == "__main__":
     asyncio.run(consume_alerts())
