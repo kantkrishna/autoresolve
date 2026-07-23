@@ -84,3 +84,6 @@ Invoke-RestMethod -Uri "http://localhost:8001/webhook/prometheus" -Method Post -
 
 # 3. Open your web browser and navigate to:
 http://localhost:8001/metrics
+
+# Provision the Isolated Production Lab Astronomy Shop
+poetry run python scripts/provision_lab.py
