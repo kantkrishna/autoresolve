@@ -1,0 +1,47 @@
+# kubernetes/lab/rbac.yaml
+
+# Manifest to create an identity (ServiceAccount) in the AI namespace, but only grant
+# it permissions (Role and RoleBinding) to perform read-only log fetching in the
+# boutique-demo namespace. It explicitly blocks the ability to create, delete, or
+# modify pods.
+
+---
+# 1. The Identity of the AI Worker
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: autoresolve-worker-sa
+  namespace: autoresolve-ai
+
+---
+# 2. The Least-Privilege Permissions (Restricted to the target namespace)
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: autoresolve-read-only
+  namespace: boutique-demo
+rules:
+  # The AI is ONLY allowed to list pods and read their logs. Nothing else.
+  - apiGroups: [""]
+    resources: ["pods", "pods/log"]
+    verbs: ["get", "list", "watch"]
+  # Allowed to read events for troubleshooting
+  - apiGroups: ["events.k8s.io", ""]
+    resources: ["events"]
+    verbs: ["get", "list", "watch"]
+
+---
+# 3. Binding the Identity to the Permissions
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: autoresolve-worker-binding
+  namespace: boutique-demo
+subjects:
+  - kind: ServiceAccount
+    name: autoresolve-worker-sa
+    namespace: autoresolve-ai  # Cross-namespace binding!
+roleRef:
+  kind: Role
+  name: autoresolve-read-only
+  apiGroup: rbac.authorization.k8s.io

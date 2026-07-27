@@ -1,0 +1,32 @@
+# kubernetes/cluster/k3d/k3d-config.yaml
+# This configuration sets up a lightweight single-server k3d cluster with optimized
+# memory usage and exposed ports for webhook testing.
+apiVersion: k3d.io/v1alpha5
+kind: Simple
+metadata:
+  name: autoresolve-lab
+servers: 1
+agents: 1
+image: rancher/k3s:v1.27.4-k3s1
+ports:
+  - port: 8088:80
+    nodeFilters:
+      - loadbalancer
+  - port: 9090:9090
+    nodeFilters:
+      - loadbalancer
+  - port: 9093:9093
+    nodeFilters:
+      - loadbalancer
+options:
+  k3d:
+    wait: true
+    timeout: "180s"
+  k3s:
+    extraArgs:
+      - arg: --disable=traefik
+        nodeFilters:
+          - server:*
+      - arg: --disable=servicelb
+        nodeFilters:
+          - server:*

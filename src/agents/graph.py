@@ -55,6 +55,13 @@ DB_URI = os.getenv(
 )
 
 # 1. Run schema migrations synchronously to create tables safely if missing
+DB_URI = os.getenv(
+    "POSTGRES_DSN", os.getenv(
+        "DB_URI",
+        "postgresql://admin:admin@postgres.autoresolve-ai.svc.cluster.local:5432/autoresolve"
+    )
+)
+
 with psycopg.connect(DB_URI, autocommit=True) as schema_conn:
     from langgraph.checkpoint.postgres import PostgresSaver
 

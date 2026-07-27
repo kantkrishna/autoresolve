@@ -15,20 +15,28 @@ Execute directly inside the containerized AI worker environment:
 --------------------------------------------------------------------------------
 """
 
+import sys
 import asyncio
+if sys.platform == "win32":
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 import hashlib
 import hmac
 import json
 import logging
 import os
 import random
-import sys
 import time
 import urllib.request
 from pathlib import Path
 
 from dotenv import load_dotenv
-load_dotenv()
+
+# FORCE the local tunnel address so it never tries to use K8s internal DNS
+os.environ["DB_URI"] = "postgresql://admin:admin@127.0.0.1:5433/autoresolve"
+os.environ["POSTGRES_DSN"] = "postgresql://admin:admin@127.0.0.1:5433/autoresolve"
+
+# Load the rest of the env file, overriding any stale system variables
+load_dotenv(override=True)
 
 # --- SUPPRESS NOISY DATABASE POOL LOGS ---
 logging.basicConfig(level=logging.ERROR, format="%(asctime)s [%(levelname)s] %(message)s")
@@ -40,10 +48,11 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.agents.graph import app  # noqa: E402
+# from src.agents.graph import app  # noqa: E402
 import psycopg  # noqa: E402
 
-WEBHOOK_URL = "http://api-gateway:8000/webhook/prometheus"
+# WEBHOOK_URL = "http://api-gateway:8000/webhook/prometheus"
+WEBHOOK_URL = "http://127.0.0.1:8000/webhook/prometheus"
 SECRET_KEY = b"dev-secret-key"
 
 SCENARIOS = [
@@ -99,10 +108,13 @@ def inject_chaos_action():
     payload_bytes = json.dumps(payload, separators=(',', ':')).encode('utf-8')
     signature = hmac.new(SECRET_KEY, payload_bytes, hashlib.sha256).hexdigest()
     
+    api_key = os.getenv("AUTORESOLVE_API_KEY", "mock-production-token")
+    
     headers = {
         "Content-Type": "application/json",
-        "X-API-Key": "dev-secret-key",
-        "X-Signature": f"sha256={signature}"
+        "X-Signature": f"sha256={signature}",
+        "X-API-Key": api_key,
+        "Authorization": f"Bearer {api_key}"
     }
     
     print(f"\n🔥 Injecting Chaos: {scenario['alertname']} into '{scenario['service']}'...")
@@ -130,6 +142,10 @@ def inject_chaos_action():
 
 async def inspect_incident_action(incident_id: str):
     """Fetches and displays the paused LangGraph state from PostgreSQL."""
+    from src.agents.graph import app  # <--- INJECT HERE
+    
+    print(f"\n🔍 Querying PostgreSQL checkpointer for {incident_id}...")
+
     if not incident_id:
         print("❌ No active Thread ID found in memory. Please inject chaos first or provide a Thread ID.")
         return
@@ -176,6 +192,9 @@ async def inspect_incident_action(incident_id: str):
 
 async def approve_incident_action(incident_id: str):
     """Unpauses the LangGraph execution thread to execute the GitHub MCP fix."""
+    from src.agents.graph import app  # <--- INJECT HERE
+    
+    print(f"\n✅ Sending HITL Approval for {incident_id}...")
     if not incident_id:
         print("❌ No active Thread ID found in memory. Please inject chaos first or provide a Thread ID.")
         return

@@ -1,0 +1,103 @@
+# kubernetes/lab/autoresolve-core.yaml
+
+# This manifest defines how FastAPI gateway and LangGraph worker run inside the
+# cluster. It binds bind the autoresolve-worker-sa ServiceAccount directly to the
+# ai-worker pod, and  dynamically passes the internal cluster DNS addresses to the
+# environment variables so that the code can find the Kafka broker and Prometheus
+# instance without going over the public internet.
+
+---
+# 1. FastAPI Ingestion Gateway
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: autoresolve-api-gateway
+  namespace: autoresolve-ai
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: autoresolve-api-gateway
+  template:
+    metadata:
+      labels:
+        app: autoresolve-api-gateway
+    spec:
+      containers:
+        - name: api-gateway
+          image: autoresolve:latest
+          imagePullPolicy: Never # Uses the locally imported k3d image
+          command: ["/app/.venv/bin/uvicorn", "src.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+          envFrom:
+            - secretRef:
+                name: autoresolve-secrets
+          env:
+            - name: API_KEY
+              value: "mock-production-token"
+            - name: AUTORESOLVE_API_KEY
+              value: "mock-production-token"
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              value: "kafka-broker.autoresolve-ai.svc.cluster.local:9092"
+            - name: POSTGRES_DSN
+              value: "postgresql://admin:admin@postgres.autoresolve-ai.svc.cluster.local:5432/autoresolve"
+            - name: DB_URI
+              value: "postgresql://admin:admin@postgres.autoresolve-ai.svc.cluster.local:5432/autoresolve"
+            - name: QDRANT_URL
+              value: "http://qdrant.autoresolve-ai.svc.cluster.local:6333"
+            - name: PROMETHEUS_URL
+              value: "http://obs-stack-prometheus-server.boutique-demo.svc.cluster.local:80"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: autoresolve-api-gateway
+  namespace: autoresolve-ai
+spec:
+  selector:
+    app: autoresolve-api-gateway
+  ports:
+    - protocol: TCP
+      port: 8000
+      targetPort: 8000
+
+---
+# 2. LangGraph AI Worker
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: autoresolve-ai-worker
+  namespace: autoresolve-ai
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: autoresolve-ai-worker
+  template:
+    metadata:
+      labels:
+        app: autoresolve-ai-worker
+    spec:
+      serviceAccountName: autoresolve-worker-sa # Least-privilege RBAC identity
+      containers:
+        - name: ai-worker
+          image: autoresolve:latest
+          imagePullPolicy: Never
+          command: ["/app/.venv/bin/python", "-m", "src.agents.worker"]
+          envFrom:
+            - secretRef:
+                name: autoresolve-secrets # Injects OPENAI_API_KEY
+          env:
+            - name: API_KEY
+              value: "mock-production-token"
+            - name: AUTORESOLVE_API_KEY
+              value: "mock-production-token"
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              value: "kafka-broker.autoresolve-ai.svc.cluster.local:9092"
+            - name: POSTGRES_DSN
+              value: "postgresql://admin:admin@postgres.autoresolve-ai.svc.cluster.local:5432/autoresolve"
+            - name: DB_URI
+              value: "postgresql://admin:admin@postgres.autoresolve-ai.svc.cluster.local:5432/autoresolve"
+            - name: QDRANT_URL
+              value: "http://qdrant.autoresolve-ai.svc.cluster.local:6333"
+            - name: PROMETHEUS_URL
+              value: "http://obs-stack-prometheus-server.boutique-demo.svc.cluster.local:80"

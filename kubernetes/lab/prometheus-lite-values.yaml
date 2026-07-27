@@ -1,0 +1,63 @@
+# kubernetes/lab/prometheus-lite-values.yaml
+# This is a lightweight Prometheus configuration for the Production Engineering Lab.
+# Deploy Prometheus to scrape metrics and Alertmanager to eventually route webhook
+# alerts to AutoResolve. Disable unneeded components (Pushgateway, Node Exporter,
+# Kube State Metrics) to conserve RAM.
+
+# 1. Prometheus Server (Required for Metrics)
+server:
+  enabled: true
+  resources:
+    limits: { memory: 256Mi }
+    requests: { cpu: 100m, memory: 128Mi }
+  global:
+    scrape_interval: 15s
+
+alertmanager:
+  enabled: true
+  resources:
+    limits: { memory: 128Mi }
+    requests: { cpu: 50m, memory: 64Mi }
+  # 1. Configure Webhook Receiver routing
+  config:
+    global:
+      resolve_timeout: 5m
+    route:
+      group_by: ['alertname', 'job']
+      group_wait: 10s
+      group_interval: 1m
+      repeat_interval: 1h
+      receiver: 'autoresolve-webhook'
+    receivers:
+      - name: 'autoresolve-webhook'
+        webhook_configs:
+          # This points to the internal cluster service we will deploy in Phase 5
+          - url: 'http://autoresolve-api-gateway.autoresolve-ai.svc.cluster.local:8000/webhook/prometheus'
+            send_resolved: true
+            http_config:
+              authorization:
+                type: Bearer
+                credentials: "mock-production-token" # Bypasses FastAPI security guardrail
+
+serverFiles:
+  # 2. Define the exact alert AutoResolve will triage
+  alerting_rules.yml:
+    groups:
+      - name: autoresolve.rules
+        rules:
+          - alert: HighCPUUsage
+            # Trigger if Payment Service CPU spikes over 80%
+            expr: sum(rate(container_cpu_usage_seconds_total{namespace="boutique-demo", pod=~"paymentservice.*"}[1m])) by (pod) > 0.8
+            for: 1m
+            labels:
+              severity: critical
+            annotations:
+              summary: "High CPU usage detected on {{ $labels.pod }}"
+              description: "Pod {{ $labels.pod }} is consuming over 80% CPU for more than 1 minute."
+
+kube-state-metrics:
+  enabled: false
+prometheus-node-exporter:
+  enabled: false
+prometheus-pushgateway:
+  enabled: false

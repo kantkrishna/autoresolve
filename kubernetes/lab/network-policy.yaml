@@ -1,0 +1,34 @@
+# kubernetes/lab/network-policy.yaml
+# This NetworkPolicy enforces security principles that restricts the target workload.
+# It allows intra-namespace traffic, DNS resolution, and unidirectional webhooks to
+# AutoResolve, blocking all other egress.
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: restrict-boutique-cross-namespace
+  namespace: boutique-demo
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+  egress:
+    # 1. Allow all INTRA-namespace traffic (Boutique microservices talk to each other)
+    - to:
+        - podSelector: {}
+        
+    # 2. Allow traffic to the AutoResolve Webhook Ingress (Port 8000)
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: autoresolve-ai
+      ports:
+        - protocol: TCP
+          port: 8000
+          
+    # 3. Allow CoreDNS resolution cluster-wide (Relaxed label requirement)
+    - ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53

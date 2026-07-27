@@ -87,3 +87,14 @@ http://localhost:8001/metrics
 
 # Provision the Isolated Production Lab Astronomy Shop
 poetry run python scripts/provision_lab.py
+
+# Kubernetes OTEL Sanity Verification
+# Verify cluster state
+# 1. Confirm single-node k3d cluster is active
+kubectl get nodes -o wide
+
+# 2. Confirm isolated namespaces with labels
+kubectl get ns --show-labels
+
+# 3. Confirm NetworkPolicy enforcement in otel-demo
+kubectl get networkpolicy -n otel-demo

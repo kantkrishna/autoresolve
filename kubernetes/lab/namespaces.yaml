@@ -1,0 +1,18 @@
+# kubernetes/lab/namespaces.yaml
+# Establish our strict boundary isolation. AutoResolve will live in its own namespace,
+# completely unaware of the boutique-demo namespace containing the target workload.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: autoresolve-ai
+  labels:
+    app.kubernetes.io/name: autoresolve
+    environment: autoresolve-lab
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: boutique-demo
+  labels:
+    app.kubernetes.io/name: online-boutique
+    environment: target-workload

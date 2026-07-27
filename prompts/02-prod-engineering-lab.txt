@@ -1,0 +1,20 @@
+Reference Production Engineering Lab
+
+To demonstrate the platform, use OpenTelemetry Astronomy Shop as the reference Production Engineering Lab - https://github.com/open-telemetry/opentelemetry-demo.
+
+Astronomy Shop is NOT part of AutoResolve.
+
+It is simply the demonstration workload.
+
+The repository must treat Astronomy Shop as an external cloud-native application.
+
+AutoResolve should interact with it exactly as it would interact with any enterprise production system.
+
+The architecture should make it possible to replace Astronomy Shop with:
+• Google Online Boutique 
+• Sock Shop 
+• DeathStarBench 
+• Train Ticket 
+• Any Kubernetes-based microservices application  without changing AutoResolve's core logic. 
+
+Come up with an implementation plan. Create user stories with acceptance criteria to transition from the mock setup to the fully decoupled Production Engineering Lab
