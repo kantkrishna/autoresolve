@@ -33,10 +33,28 @@ docker compose -f infra/docker-compose.yml up -d
 docker compose -f infra/docker-compose.yml down -v
 # Re-compile custom images from their Dockerfiles
 docker compose -f infra/docker-compose.yml up -d --build
+docker compose --env-file .env -f infra/docker-compose.yml up -d --build
 # Real-time log output of a specific service
 docker compose -f infra/docker-compose.yml logs -f ai-worker
+docker compose --env-file .env -f infra/docker-compose.yml logs -f ai-worker
+docker compose --env-file .env -f infra/docker-compose.yml logs --tail=100 ai-worker
+kubectl logs -f deployment/autoresolve-ai-worker -n autoresolve-ai
+kubectl logs deployment/autoresolve-api-gateway -n autoresolve-ai --tail=50
 # List all currently running Docker containers
 docker ps
+
+# Kubernetes Commands
+kubectl apply -f kubernetes/lab/autoresolve-core.yaml
+kubectl delete pod -l app=autoresolve-api-gateway -n autoresolve-ai
+kubectl delete pod -l app=autoresolve-ai-worker -n autoresolve-ai
+kubectl delete deployment kafka-broker -n autoresolve-ai
+kubectl get pods -n autoresolve-ai
+kubectl get pods -n autoresolve-ai -w
+kubectl describe pod -l app=autoresolve-ai-worker -n autoresolve-ai
+kubectl cluster-info
+k3d cluster delete autoresolve-lab
+k3d cluster start autoresolve-lab
+k3d image import autoresolve:latest -c autoresolve-lab
 
 # Send a test alert payload to a local monitoring webhook. simulates a Prometheus
 # alert system sending a high-memory warning to a backend application 

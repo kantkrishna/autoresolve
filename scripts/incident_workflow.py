@@ -120,8 +120,9 @@ def inject_chaos_action():
     print(f"\n🔥 Injecting Chaos: {scenario['alertname']} into '{scenario['service']}'...")
     try:
         req = urllib.request.Request(WEBHOOK_URL, data=payload_bytes, headers=headers, method="POST")
-        with urllib.request.urlopen(req) as response:
-            resp_body = json.loads(response.read().decode())
+        with urllib.request.urlopen(req, timeout=5.0) as response:
+            status_code = response.status
+            resp_body = json.loads(response.read().decode("utf-8"))
             print("✅ Alert Accepted by API Gateway!")
             print(f"📦 HTTP Ingestion Receipt UUID: {resp_body.get('tracking_id', 'N/A')}")
             
@@ -135,6 +136,16 @@ def inject_chaos_action():
             else:
                 print("⚠️  Worker is still processing. Check 'docker logs infra-ai-worker-1' for progress.")
                 return None
+    except urllib.error.HTTPError as e:
+        print(f"❌ API Gateway rejected payload: HTTP Error {e.code}: {e.reason}")
+        return None
+    except urllib.error.URLError as e:
+        print(f"❌ Failed to reach API Gateway: {e.reason}")
+        print("💡 Hint: Ensure your port-forwarding tunnel is active: kubectl port-forward svc/autoresolve-api-gateway 8000:8000 -n autoresolve-ai")
+        return None
+    except TimeoutError:
+        print("❌ Request timed out! The API Gateway took too long to respond.")
+        return None
     except Exception as e:
         print(f"❌ Failed to inject alert: {e}")
         return None

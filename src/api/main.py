@@ -1,4 +1,5 @@
 # src/api/main.py
+import asyncio
 import logging
 import uuid
 from contextlib import asynccontextmanager
@@ -23,13 +24,30 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
-    """Manages the startup and shutdown lifecycle of the FastAPI app."""
-    try:
-        await publisher.start()
-    except Exception as e:
-        logger.error(f"FATAL: Failed to start Kafka Producer: {e}")
+    """Manages the startup and shutdown lifecycle of the FastAPI app with robust retry-backoff."""
+    max_retries = 5
+    base_delay = 2.0
+    
+    for attempt in range(1, max_retries + 1):
+        try:
+            logger.info(f"[API Gateway] Kafka connection attempt {attempt}/{max_retries}...")
+            await publisher.start()
+            logger.info("🟢 [API Gateway] Successfully connected to Kafka producer!")
+            break
+        except Exception as e:
+            if attempt == max_retries:
+                logger.error(f"FATAL: Exhausted all {max_retries} Kafka connection attempts: {e}")
+                raise e
+            delay = base_delay * (2 ** (attempt - 1))
+            logger.warning(f"⚠️ Kafka not ready ({e}). Retrying in {delay}s...")
+            await asyncio.sleep(delay)
+            
     yield
-    await publisher.stop()
+    
+    try:
+        await publisher.stop()
+    except Exception as e:
+        logger.error(f"Error stopping Kafka publisher: {e}")
 
 
 app = FastAPI(

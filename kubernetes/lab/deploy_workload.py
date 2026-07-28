@@ -1,4 +1,4 @@
-# kubernetes/lab/deploy_workload.py
+# kubernetes/lab/c
 # Automates deployment of the Google Online Boutique microservices demo and a
 # lightweight Prometheus stack for the Production Engineering Lab.
 
