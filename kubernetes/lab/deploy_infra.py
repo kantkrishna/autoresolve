@@ -1,4 +1,4 @@
-# scripts/deploy_infra.py
+# kubernetes/lab/deploy_infra.py
 
 # Automates the deployment of the core AutoResolve infrastructure components into the
 # k3d cluster. This includes PostgreSQL for state checkpointing, Redpanda for webhook
@@ -34,7 +34,7 @@ def run_command(command: list, description: str):
         sys.exit(1)
 
 def main():
-    base_dir = Path(__file__).resolve().parent.parent
+    base_dir = Path(__file__).resolve().parent.parent.parent
     infra_file = base_dir / "kubernetes" / "lab" / "autoresolve-infra.yaml"
 
     print("==========================================================")

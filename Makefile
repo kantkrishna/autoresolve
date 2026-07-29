@@ -18,3 +18,9 @@ clean:
 	find . -type d -name "__pycache__" -exec rm -rf {} +
 	find . -type f -name "*.pyc" -delete
 	rm -rf .pytest_cache .ruff_cache .mypy_cache
+
+reset:
+	poetry run python scripts/force-reset-lab.py
+
+reload:
+	poetry run python scripts/soft-rebuild-lab.py

@@ -33,27 +33,30 @@ services:
 
   postgres:
     image: postgres:15-alpine
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: autoresolve
-      TZ: Asia/Kolkata
     ports:
       - "5432:5432"
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+      TZ: Asia/Kolkata
     networks:
       - autoresolve_net
 
   qdrant:
     image: qdrant/qdrant:latest
-    environment:
-      TZ: Asia/Kolkata
     ports:
       - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - ../target_environments/qdrant_data:/qdrant/storage
+    environment:
+      TZ: Asia/Kolkata
     networks:
       - autoresolve_net
 
   api-gateway:
-    build: 
+    build:
       context: ../
       dockerfile: Dockerfile
     command: ["uvicorn", "src.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
@@ -63,12 +66,13 @@ services:
       - ../:/app
       - /app/.venv
     environment:
-      - KAFKA_BOOTSTRAP_SERVERS=kafka:29092 
-      - KAFKA_TOPIC=incidents
-      - OPENAI_API_KEY=dummy_key_to_satisfy_pydantic
-      - ANTHROPIC_API_KEY=dummy_key_to_satisfy_pydantic
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
       - QDRANT_URL=http://qdrant:6333
-      - POSTGRES_DSN=postgresql://postgres:postgres@postgres:5432/autoresolve
+      # Securely injecting secrets into the DSN string
+      - POSTGRES_DSN=postgresql://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - AUTORESOLVE_API_KEY=${AUTORESOLVE_API_KEY}
+      - API_KEY=${API_KEY}
       - TZ=Asia/Kolkata
     depends_on:
       kafka:
@@ -88,23 +92,21 @@ services:
       - "host.docker.internal:host-gateway"
     environment:
       - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
-      - OPENAI_API_KEY=dummy_key_to_satisfy_pydantic
-      - ANTHROPIC_API_KEY=dummy_key_to_satisfy_pydantic
       - QDRANT_URL=http://qdrant:6333
-      - POSTGRES_DSN=postgresql://postgres:postgres@postgres:5432/autoresolve
-      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/autoresolve
+      # Securely injecting secrets into the DSN string
+      - POSTGRES_DSN=postgresql://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}
+      - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - LLM_BACKEND=${LLM_BACKEND}
+      - OPENAI_MODEL_NAME=${OPENAI_MODEL_NAME}
       - GITHUB_TOKEN=${GITHUB_TOKEN}
-      - LLM_BACKEND=local
-      # FIX: Prefixed with ollama/ to guide LiteLLM internal provider routing algorithms
-      - LOCAL_MODEL_NAME=ollama/qwen2.5-coder:3b
-      - OLLAMA_BASE_URL=http://host.docker.internal:11434
+      - GITHUB_REPO=${GITHUB_REPO}
+      - LANGCHAIN_TRACING_V2=${LANGCHAIN_TRACING_V2:-true}
       - TZ=Asia/Kolkata
     depends_on:
       kafka:
         condition: service_healthy
       postgres:
-        condition: service_started
-      qdrant:
         condition: service_started
     networks:
       - autoresolve_net

@@ -1,4 +1,4 @@
-# kubernetes/lab/phase3_alert_routing.py
+# kubernetes/lab/alert_routing.py
 # Automates the configuration of fixed network policy and transparently upgrade our
 # Helm release to inject the new Alertmanager configs without taking the cluster down.
 
@@ -36,7 +36,7 @@ def main():
     prom_values = base_dir / "prometheus-lite-values.yaml"
 
     print("==========================================================")
-    print("🚨 AutoResolve - Phase 3: Alertmanager Routing & Network Fix")
+    print("🚨 AutoResolve - Alertmanager Routing & Network Fix")
     print("==========================================================\n")
 
     # Step 1: Apply Fixed Network Policy
@@ -56,7 +56,7 @@ def main():
     )
 
     print("\n==========================================================")
-    print("[SUCCESS] Phase 3 Complete! Alert Routing is Configured.")
+    print("[SUCCESS] Complete! Alert Routing is Configured.")
     print("==========================================================")
 
 if __name__ == "__main__":
