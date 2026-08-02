@@ -30,3 +30,7 @@ options:
       - arg: --disable=servicelb
         nodeFilters:
           - server:*
+env:
+  - envVar: TZ=${CLUSTER_TIMEZONE}
+    nodeFilters:
+      - all

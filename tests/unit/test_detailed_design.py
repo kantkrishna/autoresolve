@@ -37,7 +37,7 @@ def test_alert_prompt_injection_guardrail():
         )
 
     # We update the string assertion to match the actual exception text thrown
-    # by your specific Pydantic schema in Phase 4/5.
+    # by your specific Pydantic schema.
     error_message = str(exc_info.value).lower()
 
     # Check for the key phrases your Pydantic validator is actually outputting

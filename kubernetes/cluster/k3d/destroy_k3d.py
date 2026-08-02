@@ -34,7 +34,7 @@ def run_command(command: list, description: str):
 
 def main():
     print("==================================================")
-    print("🛑 AutoResolve - Destroying k3d Cluster")
+    print("[🛑] AutoResolve - Destroying k3d Cluster")
     print("==================================================\n")
 
     # Check if cluster exists before trying to delete it

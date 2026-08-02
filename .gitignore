@@ -20,8 +20,9 @@ env/
 # VS Code settings
 .vscode/
 
-# Repomix output
+# Repomix
 repomix-output.xml
+repomix.config.json
 
 # Observability & Tracing
 .opensmith/traces.db

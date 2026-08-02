@@ -5,9 +5,11 @@ Automates provisioning of the k3d cluster with normalized line-ending output.
 """
 
 import os
-import sys
 import subprocess
+import sys
 from pathlib import Path
+
+from dotenv import load_dotenv
 
 # Enforce UTF-8 in Windows PowerShell to prevent emoji/charmap crashes
 if sys.platform == "win32":
@@ -35,15 +37,23 @@ def run_command(command: list, description: str):
         sys.exit(1)
 
 def main():
+    # Ensure the Timezone ConfigMap exists k3d Cluster Provisioning
+    base_dir = Path(__file__).resolve().parent.parent.parent.parent
+    env_path = base_dir / ".env"
+    load_dotenv(dotenv_path=env_path)
+    
+    tz = os.getenv("CLUSTER_TIMEZONE", "Asia/Kolkata")
+    print(f"[INFO] Loaded CLUSTER_TIMEZONE={tz} for K3d virtual nodes.")
+    
     base_dir = Path(__file__).resolve().parent.parent.parent
     k3d_config = base_dir / "cluster" / "k3d" / "k3d-config.yaml"
-    
+
     # Updated paths based on your new file locations
     namespaces_file = base_dir / "lab" / "namespaces.yaml"
     netpol_file = base_dir / "lab" / "network-policy.yaml"
 
     print("==================================================")
-    print("🚀 AutoResolve - Phase 1: k3d Cluster Provisioning")
+    print("[🚀] AutoResolve - k3d Cluster Provisioning")
     print("==================================================\n")
 
     # Step 1: Create Cluster

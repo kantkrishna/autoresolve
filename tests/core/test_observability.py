@@ -6,7 +6,7 @@ Ensures Prometheus metrics and OpenTelemetry tracing initialize and record corre
 from opentelemetry.trace import Span
 from prometheus_client import REGISTRY
 
-# Import the observability constructs developed in Phase 13
+# Import the observability constructs developed in src/core/observability.py
 from src.core.observability import (
     ALERT_INGESTION_COUNTER,
     LLM_TOKEN_USAGE,

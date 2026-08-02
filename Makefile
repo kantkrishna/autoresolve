@@ -22,5 +22,5 @@ clean:
 reset:
 	poetry run python scripts/force-reset-lab.py
 
-reload:
+rebuild:
 	poetry run python scripts/soft-rebuild-lab.py

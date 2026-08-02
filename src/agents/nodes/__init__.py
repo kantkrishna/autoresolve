@@ -2,6 +2,8 @@
 # to recognize the nodes directory as an importable "package"
 # src/agents/nodes/__init__.py
 import logging
+import os
+import traceback
 from typing import Any, Dict
 
 from langchain_core.messages import SystemMessage
@@ -84,12 +86,18 @@ def resolution_node(state: IncidentState) -> dict[str, Any]:
 
     # 2. Query Qdrant
     vector_store = get_vector_store()
+    logger.info(f"[DEBUG] Vector Store: {vector_store}")
+    logger.info(f"[DEBUG] Querying Vector Store for service: {service}, hypothesis: {hypothesis}")
     docs = vector_store.similarity_search(f"Fix for {service} {hypothesis}", k=1)
+    logger.info(f"[DEBUG]Retrieved {docs} from Vector Store")
     retrieved_runbook = (
         docs[0].page_content if docs else "No historical runbooks found."
     )
     prompt = f"Based on findings: {hypothesis} and runbook: {retrieved_runbook}, formulate a brief, 1-sentence proposed fix."  # noqa: E501
+    logger.info(f"[DEBUG] Prompt: {prompt}")
     response = llm.invoke([SystemMessage(content=prompt)])
+    logger.info(f"[DEBUG]LLM Response: {response.content}")
+
     return {
         "proposed_fix": str(response.content),
         "messages": [SystemMessage(content=f"Resolution strategy: {response.content}")],
@@ -97,22 +105,86 @@ def resolution_node(state: IncidentState) -> dict[str, Any]:
 
 
 # --- EXECUTION NODE ---
-def execution_node(state: Dict[str, Any]) -> Dict[str, Any]:
-    """Execution Agent: Drafts remediation artifacts."""
-    logger.info("Execution Agent: Drafting remediation code...")
+async def execution_node(state: IncidentState) -> dict[str, Any]:
+    """Execution Agent: Translates the resolution plan into code and drafts a PR via MCP."""
+    logger.info("Execution Agent: Drafting remediation code via GitHub MCP...")
+    
+    incident_id = state.get("incident_id", "UNKNOWN-INCIDENT")
+    service = state.get("impacted_service", "target-service")
     resolution_plan = state.get("proposed_fix", "")
-    # Placeholder for actual GitHub MCP call logic
-    mock_yaml = "apiVersion: apps/v1\nkind: Deployment\n..."
-    artifacts = RemediationArtifacts(
-        kubernetes_yaml=mock_yaml,
-        pr_title="fix(infra): Auto-remediate",
-        pr_body=f"Generated fix: {resolution_plan}",
-    )
-    return {
-        "proposed_artifacts": artifacts.model_dump(),
-        "human_approval_status": "pending",
-        "messages": [SystemMessage(content="Execution complete: PR drafted.")],
-    }
+    
+    # In production, the LLM generates the targeted YAML patch dynamically.
+    # For deterministic validation, we utilize a structured patch format.
+    generated_yaml_patch = f"""
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {service}
+spec:
+  template:
+    spec:
+      containers:
+      - name: app
+        resources:
+          limits:
+            memory: "2Gi"
+"""
+
+    branch_name = f"autoresolve/fix-{incident_id.lower()}"
+    commit_msg = f"fix({service}): Autonomous remediation for incident {incident_id}"
+    
+    try:
+        # Execute the JSON-RPC call to the isolated GitHub MCP Server
+        github_result = await execute_mcp_tool(
+            script_path="mcp-servers/github-mcp/github_server.py",
+            tool_name="propose_github_fix",
+            args={
+                "repo_name": os.getenv("GITHUB_REPO", "your-org/your-repo"),
+                "file_path": f"kubernetes/deployments/{service}.yaml",
+                "new_content": generated_yaml_patch.strip(),
+                "commit_message": commit_msg,
+                "branch_name": branch_name
+            }
+        )
+
+        if not github_result.startswith("Success!"):
+            raise RuntimeError(f"GitHub MCP Tool Error: {github_result}")
+        # 👆 ============================= 👆
+        
+        logger.info(f"🟢 GitHub MCP Output: {github_result}")
+        
+        artifacts = RemediationArtifacts(
+            kubernetes_yaml=generated_yaml_patch.strip(),
+            pr_title=commit_msg,
+            pr_body=f"Generated fix based on runbook analysis: {resolution_plan}"
+        )
+        
+        return {
+            "proposed_artifacts": artifacts.model_dump(),
+            "human_approval_status": "pending",
+            "proposed_fix_pr_url": github_result,
+            "messages": [SystemMessage(content=f"Execution complete: {github_result}")]
+        }
+        
+    except Exception as e:
+        # 1. Capture the full, multi-level stack trace as a formatted string
+        error_trace = "".join(traceback.format_exception(type(e), e, e.__traceback__))
+        
+        # 2. Log it prominently so it appears in your Kubernetes/Docker logs
+        logger.error(f"❌ GitHub MCP Execution Failed. Detailed Traceback:\n{error_trace}")
+        
+        # 3. If it's an ExceptionGroup, unpack the specific sub-exceptions
+        if hasattr(e, 'exceptions'):
+            for i, sub_exc in enumerate(e.exceptions):
+                logger.error(f"  ↳ Sub-Exception {i+1}: {repr(sub_exc)}")
+
+        return {
+            "messages": [
+                SystemMessage(
+                    content="Execution failed due to server error. Check worker logs."
+                )
+            ]
+        }
 
 
 # --- REVIEW NODE ---

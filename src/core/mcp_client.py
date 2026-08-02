@@ -1,4 +1,5 @@
 # src/core/mcp_client.py
+import os
 import sys
 from typing import Any
 
@@ -17,6 +18,7 @@ async def execute_mcp_tool(
     server_params = StdioServerParameters(
         command=sys.executable,  # Uses the current poetry environment Python
         args=[script_path],
+        env=os.environ,
     )
 
     # Context managers ensure the subprocess is cleanly destroyed after execution

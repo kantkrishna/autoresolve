@@ -36,7 +36,10 @@ def route_after_review(state: Dict[str, Any]) -> str:
     """Conditional edge routing logic for LangGraph."""
     status = state.get("human_approval_status", "pending")
     if status == "approved":
-        return "deploy_node"  # Future MCP execution
+        # CRITICAL FIX: Change from non-existent 'deploy_node' to 'execution_node'
+        return "execution_node" 
     elif status == "revision":
-        return "execution_node"
+        return "resolution_node" # Route back to formulate a new fix
+    elif status == "rejected":
+        return "report_node"     # Finalize incident without action
     return "__end__"

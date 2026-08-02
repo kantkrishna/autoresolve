@@ -9,13 +9,13 @@ from fastapi import Depends, FastAPI, HTTPException, Request, Response, status
 from opentelemetry import trace
 from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 
-# Correctly referencing our Phase 5 modules
+# Correctly referencing our modules
 from src.api.auth import verify_api_key
 from src.api.producer import publisher
 from src.api.rate_limit import RateLimiter
 from src.api.schemas import PrometheusAlert
 
-# Phase 13 Observability imports
+# Observability imports
 from src.core.observability import ALERT_INGESTION_COUNTER, tracer
 
 logging.basicConfig(level=logging.INFO)

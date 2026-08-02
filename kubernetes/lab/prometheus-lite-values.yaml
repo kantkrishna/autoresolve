@@ -31,7 +31,7 @@ alertmanager:
     receivers:
       - name: 'autoresolve-webhook'
         webhook_configs:
-          # This points to the internal cluster service we will deploy in Phase 5
+          # This points to the internal cluster service we will deploy in the lab
           - url: 'http://autoresolve-api-gateway.autoresolve-ai.svc.cluster.local:8000/webhook/prometheus'
             send_resolved: true
             http_config:

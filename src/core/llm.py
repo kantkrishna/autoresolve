@@ -26,12 +26,16 @@ def get_agnostic_llm(temperature: float = 0.1) -> ChatLiteLLM:
     else:
         # Route to Cloud Provider
         return ChatLiteLLM(
-            model="openai/gpt-4o-mini",  # Standard fallback
+            model=settings.OPENAI_MODEL_NAME,  # Standard fallback
+            custom_llm_provider="openai",
             temperature=temperature,
             max_retries=3,
             request_timeout=30.0,
             drop_params=True,
             # Explicitly prefix the fallbacks as well
-            fallbacks=["openai/gpt-5-nano", "openai/gpt-5.4-nano"],
+            fallbacks=[
+                settings.OPENAI_MODEL_NAME_FALLBACK1,
+                settings.OPENAI_MODEL_NAME_FALLBACK2
+            ],
             model_kwargs={"top_p": 0.9},
         )

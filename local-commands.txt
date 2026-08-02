@@ -38,12 +38,13 @@ docker compose --env-file .env -f infra/docker-compose.yml up -d --build
 docker compose -f infra/docker-compose.yml logs -f ai-worker
 docker compose --env-file .env -f infra/docker-compose.yml logs -f ai-worker
 docker compose --env-file .env -f infra/docker-compose.yml logs --tail=100 ai-worker
-kubectl logs -f deployment/autoresolve-ai-worker -n autoresolve-ai
-kubectl logs deployment/autoresolve-api-gateway -n autoresolve-ai --tail=50
 # List all currently running Docker containers
 docker ps
 
 # Kubernetes Commands
+k3d cluster delete autoresolve-lab
+k3d cluster start autoresolve-lab
+k3d image import autoresolve:latest -c autoresolve-lab
 kubectl apply -f kubernetes/lab/autoresolve-core.yaml
 kubectl delete pod -l app=autoresolve-api-gateway -n autoresolve-ai
 kubectl delete pod -l app=autoresolve-ai-worker -n autoresolve-ai
@@ -52,9 +53,9 @@ kubectl get pods -n autoresolve-ai
 kubectl get pods -n autoresolve-ai -w
 kubectl describe pod -l app=autoresolve-ai-worker -n autoresolve-ai
 kubectl cluster-info
-k3d cluster delete autoresolve-lab
-k3d cluster start autoresolve-lab
-k3d image import autoresolve:latest -c autoresolve-lab
+kubectl exec deployment/autoresolve-ai-worker -n autoresolve-ai -- env
+kubectl logs -f deployment/autoresolve-ai-worker -n autoresolve-ai
+kubectl logs deployment/autoresolve-api-gateway -n autoresolve-ai --tail=50
 
 # Send a test alert payload to a local monitoring webhook. simulates a Prometheus
 # alert system sending a high-memory warning to a backend application 

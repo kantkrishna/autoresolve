@@ -6,7 +6,8 @@ import logging
 import os
 
 from aiokafka import AIOKafkaConsumer
-from aiokafka.errors import UnknownTopicOrPartitionError, KafkaConnectionError
+from aiokafka.errors import KafkaConnectionError, UnknownTopicOrPartitionError
+from langchain_core.messages import HumanMessage
 
 from src.agents.graph import app as agent_app
 
@@ -65,7 +66,7 @@ async def consume_alerts():
                 logger.info(f"🧠 Invoking LangGraph Swarm for {thread_id}...")
 
                 initial_state = {
-                    "messages": [],
+                    "messages": [HumanMessage(content=json.dumps(payload))],
                     "incident_id": thread_id,
                     "tracking_id": thread_id,
                     "proposed_fix": "",

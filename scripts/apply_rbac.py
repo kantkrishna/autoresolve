@@ -37,7 +37,7 @@ def main():
     rbac_file = base_dir / "kubernetes" / "lab" / "rbac.yaml"
 
     print("==========================================================")
-    print("🔐 AutoResolve - Phase 5: Zero-Trust Security Initialization")
+    print("[🔐] AutoResolve - Zero-Trust Security Initialization")
     print("==========================================================\n")
 
     run_command(

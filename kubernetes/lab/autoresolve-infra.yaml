@@ -4,6 +4,31 @@
 # autoresolve-ai namespace. It includes PostgreSQL for state checkpointing, Redpanda
 # for webhook queuing, and Qdrant for vector storage.
 
+# 1. Persistent Volume for PostgreSQL
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: postgres-pv
+  namespace: autoresolve-ai
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /var/lib/autoresolve/postgres # Mapped safely inside the k3d node
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-pvc
+  namespace: autoresolve-ai
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
 ---
 # 1. PostgreSQL (For LangGraph State Checkpointing)
 apiVersion: apps/v1
@@ -33,9 +58,21 @@ spec:
               value: "admin"
             - name: POSTGRES_DB
               value: "autoresolve"
+            - name: TZ
+              valueFrom:
+                configMapKeyRef:
+                  name: autoresolve-config
+                  key: CLUSTER_TIMEZONE
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: postgres-storage
           resources:
             limits:
               memory: 256Mi
+      volumes:
+        - name: postgres-storage
+          persistentVolumeClaim:
+            claimName: postgres-pv
 ---
 apiVersion: v1
 kind: Service
@@ -49,7 +86,6 @@ spec:
     - protocol: TCP
       port: 5432
       targetPort: 5432
-
 ---
 # 2. Apache Kafka (Official ASF Image - KRaft Mode)
 apiVersion: apps/v1
@@ -91,6 +127,11 @@ spec:
               value: "1"
             - name: KAFKA_JVM_PERFORMANCE_OPTS
               value: "-Xms256m -Xmx256m"
+            - name: TZ
+              valueFrom:
+                configMapKeyRef:
+                  name: autoresolve-config
+                  key: CLUSTER_TIMEZONE
           resources:
             limits:
               memory: 512Mi
@@ -107,7 +148,6 @@ spec:
     - protocol: TCP
       port: 9092
       targetPort: 9092
-
 ---
 # 3. Qdrant (Vector Database for RAG Runbooks)
 apiVersion: apps/v1
@@ -133,6 +173,12 @@ spec:
           resources:
             limits:
               memory: 256Mi
+          env:
+            - name: TZ
+              valueFrom:
+                configMapKeyRef:
+                  name: autoresolve-config
+                  key: CLUSTER_TIMEZONE
 ---
 apiVersion: v1
 kind: Service

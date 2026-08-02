@@ -1,4 +1,5 @@
 # kubernetes/lab/deploy_workload.py
+
 # Automates deployment of the Google Online Boutique microservices demo and a
 # lightweight Prometheus stack for the Production Engineering Lab.
 
@@ -39,7 +40,7 @@ def main():
     BOUTIQUE_MANIFEST = "https://raw.githubusercontent.com/GoogleCloudPlatform/microservices-demo/main/release/kubernetes-manifests.yaml"
 
     print("==========================================================")
-    print("🛍️ AutoResolve - Target Workload Deployment")
+    print("[🛍️] AutoResolve - Target Workload Deployment")
     print("==========================================================\n")
 
     # Step 1: Deploy Google Online Boutique

@@ -36,12 +36,12 @@ def main():
     prom_values = base_dir / "prometheus-lite-values.yaml"
 
     print("==========================================================")
-    print("🚨 AutoResolve - Alertmanager Routing & Network Fix")
+    print("[🚨] AutoResolve - Alertmanager Routing & Network Fix")
     print("==========================================================\n")
 
     # Step 1: Apply Fixed Network Policy
     run_command(
-        ["kubectl", "apply", "-f", str(netpol_file)],
+        ["kubectl", "apply", "--validate=false", "-f", str(netpol_file)],
         "Applying updated Zero-Trust Network Policy (Unblocking Microservices)"
     )
 

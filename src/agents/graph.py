@@ -48,7 +48,7 @@ def build_incident_graph():
 
 
 # ---------------------------------------------------------
-# Phase 10: Persistent Asynchronous PostgreSQL Checkpointing
+# Persistent Asynchronous PostgreSQL Checkpointing
 # ---------------------------------------------------------
 DB_URI = os.getenv(
     "DATABASE_URL", "postgresql://postgres:postgres@postgres:5432/autoresolve"

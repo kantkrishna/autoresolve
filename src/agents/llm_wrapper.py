@@ -14,7 +14,9 @@ llm_circuit_config = CircuitBreakerConfig(
     expected_exceptions=(Exception,) 
 )
 llm_circuit_breaker = CircuitBreaker("LLM_API", llm_circuit_config)
-llm = ChatLiteLLM(model="gpt-4o")
+
+# Initialize the LLM client (this will be replaced with the agnostic LLM in production)
+llm = ChatLiteLLM
 
 async def resilient_llm_invoke(messages: list) -> Any:
     """
