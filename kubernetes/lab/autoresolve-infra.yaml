@@ -4,19 +4,20 @@
 # autoresolve-ai namespace. It includes PostgreSQL for state checkpointing, Redpanda
 # for webhook queuing, and Qdrant for vector storage.
 
+---
 # 1. Persistent Volume for PostgreSQL
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: postgres-pv
-  namespace: autoresolve-ai
-spec:
-  capacity:
-    storage: 1Gi
-  accessModes:
-    - ReadWriteOnce
-  hostPath:
-    path: /var/lib/autoresolve/postgres # Mapped safely inside the k3d node
+# apiVersion: v1
+# kind: PersistentVolume
+# metadata:
+#   name: postgres-pv
+#   namespace: autoresolve-ai
+# spec:
+#   capacity:
+#     storage: 1Gi
+#   accessModes:
+#     - ReadWriteOnce
+#   hostPath:
+#     path: /var/lib/autoresolve/postgres
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -72,7 +73,7 @@ spec:
       volumes:
         - name: postgres-storage
           persistentVolumeClaim:
-            claimName: postgres-pv
+            claimName: postgres-pvc
 ---
 apiVersion: v1
 kind: Service

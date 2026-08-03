@@ -5,8 +5,10 @@ Tears down the k3d Production Engineering Lab cluster to free system resources.
 """
 
 import os
-import sys
+import shutil
 import subprocess
+import sys
+from pathlib import Path
 
 # Enforce UTF-8 in Windows PowerShell to prevent emoji/charmap crashes
 if sys.platform == "win32":
@@ -45,6 +47,17 @@ def main():
             ["k3d", "cluster", "delete", "autoresolve-lab"],
             "Deleting k3d cluster (autoresolve-lab) and freeing resources"
         )
+
+        data_dir = Path.home() / ".autoresolve" / "postgres-data"
+        if data_dir.exists():
+            print(f"\n[🧹] Performing Disk Hygiene: Scrubbing orphaned database volumes at {data_dir}...")
+            try:
+                # Recursively delete the directory and all its contents
+                shutil.rmtree(data_dir)
+                print("       [SUCCESS] Old persistent volumes securely deleted.")
+            except Exception as e:
+                print(f"       [WARNING] Could not completely delete files (they may be locked by Windows): {e}")
+        
         print("\n==================================================")
         print("[SUCCESS] Cluster successfully destroyed! Ports and RAM are free.")
         print("==================================================")

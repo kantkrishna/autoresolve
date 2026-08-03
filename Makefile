@@ -24,3 +24,6 @@ reset:
 
 rebuild:
 	poetry run python scripts/soft-rebuild-lab.py
+
+wake:
+	poetry run python scripts/wake-up-lab.py

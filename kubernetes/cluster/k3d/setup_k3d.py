@@ -37,6 +37,18 @@ def run_command(command: list, description: str):
         sys.exit(1)
 
 def main():
+    # Idempotent Directory Creation & Path Injection
+    user_home = Path.home()
+    data_dir = user_home / ".autoresolve" / "postgres-data"
+    
+    print(f"[INFO] Securing persistent data directory at: {data_dir}")
+    # Create the directory safely (fails silently if it already exists)
+    data_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Inject into the environment. We use .as_posix() to safely convert 
+    # Windows backslashes (C:\) to forward slashes (C:/) which Docker prefers.
+    os.environ["AUTORESOLVE_DATA_DIR"] = data_dir.as_posix()
+
     # Ensure the Timezone ConfigMap exists k3d Cluster Provisioning
     base_dir = Path(__file__).resolve().parent.parent.parent.parent
     env_path = base_dir / ".env"

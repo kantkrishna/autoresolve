@@ -35,12 +35,23 @@ def main():
     print("Initiating Non-Destructive Soft Rebuild...")
     
     # 1. Graceful Stop
-    run_command(["k3d", "cluster", "stop", "autoresolve-lab"], "Stopping k3d cluster")
+    # run_command(["k3d", "cluster", "stop", "autoresolve-lab"], "Stopping k3d cluster")
     # If a local docker-compose was used for testing, bring it down safely
-    subprocess.run(["docker", "compose", "down"], cwd=str(base_dir), capture_output=True)
+    # subprocess.run(["docker", "compose", "down"], cwd=str(base_dir), capture_output=True)
     
     # 2. Restart Cluster (Preserves PVs/Databases)
-    run_command(["k3d", "cluster", "start", "autoresolve-lab"], "Starting k3d cluster")
+    # run_command(["k3d", "cluster", "start", "autoresolve-lab"], "Starting k3d cluster")
+
+    print("\n[🔌] Synchronizing Kubeconfig (Healing dormant API connections)...")
+    try:
+        # Forces k3d to refresh the local ~/.kube/config with the live cluster connection
+        subprocess.run(
+            ["k3d", "kubeconfig", "merge", "autoresolve-lab", "--kubeconfig-switch-context"], 
+            check=True, 
+            capture_output=True
+        )
+    except subprocess.CalledProcessError:
+        print("[⚠️] Warning: Could not sync kubeconfig. Is the k3d cluster running?")
     
     # 3. Synchronize Routing & RBAC (Non-destructive idempotency)
     subprocess.run([sys_exe, str(base_dir / "kubernetes/lab/alert_routing.py")], check=True)

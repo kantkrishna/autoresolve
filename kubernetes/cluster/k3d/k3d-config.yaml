@@ -8,6 +8,13 @@ metadata:
 servers: 1
 agents: 1
 image: rancher/k3s:v1.27.4-k3s1
+kubeAPI:
+  hostIP: "127.0.0.1"
+  hostPort: "6443"
+volumes:
+  - volume: ${AUTORESOLVE_DATA_DIR}:/var/lib/rancher/k3s/storage
+    nodeFilters:
+      - all
 ports:
   - port: 8088:80
     nodeFilters:
