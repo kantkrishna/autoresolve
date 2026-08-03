@@ -27,3 +27,5 @@ repomix.config.json
 # Observability & Tracing
 .opensmith/traces.db
 .opensmith/traces.db-journal
+
+target_environments/
