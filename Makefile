@@ -27,3 +27,9 @@ rebuild:
 
 wake:
 	poetry run python scripts/wake-up-lab.py
+
+tunnels:
+	poetry run python scripts/start_tunnels.py
+
+workflow:
+	poetry run python scripts/incident_workflow.py

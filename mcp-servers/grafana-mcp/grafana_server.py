@@ -1,4 +1,9 @@
-﻿from src.core.mcp_base.server import get_secure_mcp_server, secure_tool
+﻿# mcp-servers/grafana-mcp/grafana_server.py
+
+# This file is part of the Grafana MCP Server, which provides an interface to fetch
+# strictly typed metric telemetry from Grafana panels.
+
+from src.core.mcp_base.server import get_secure_mcp_server, secure_tool
 
 mcp = get_secure_mcp_server("GrafanaMCP")
 

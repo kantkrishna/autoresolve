@@ -1,4 +1,9 @@
-﻿import os
+﻿# mcp-servers/filesystem-mcp/fs_server.py
+
+# This file is part of the Filesystem MCP Server, which provides an interface to read
+# files from a strictly allowed directory.
+
+import os
 
 from src.core.mcp_base.server import get_secure_mcp_server, secure_tool
 

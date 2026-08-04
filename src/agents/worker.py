@@ -1,5 +1,9 @@
 # src/agents/worker.py
-# src/agents/worker.py
+
+# This file contains the Kafka consumer logic for the AI Worker.
+# It listens for Prometheus alert messages on the 'incidents' topic and invokes the
+# LangGraph Swarm to process each incident.
+
 import asyncio
 import json
 import logging

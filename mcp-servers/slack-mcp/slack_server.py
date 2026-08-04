@@ -1,4 +1,9 @@
-﻿from src.core.mcp_base.server import get_secure_mcp_server, secure_tool
+﻿# mcp-servers/slack-mcp/slack_server.py
+
+# This file is part of the Slack MCP Server, which provides an interface to interact
+# with Slack channels.
+
+from src.core.mcp_base.server import get_secure_mcp_server, secure_tool
 
 mcp = get_secure_mcp_server("SlackMCP")
 

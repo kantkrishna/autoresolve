@@ -1,6 +1,6 @@
-"""
-scripts/incident_workflow.py
+# scripts/incident_workflow.py
 
+"""
 AutoResolve Unified SRE Control Console & Operational CLI
 --------------------------------------------------------------------------------
 PURPOSE:

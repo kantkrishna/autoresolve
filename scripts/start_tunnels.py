@@ -14,7 +14,7 @@ import time
 
 def main():
     print("=======================================================")
-    print("🚀 Starting AutoResolve Network Tunnels")
+    print("[🚀] Starting AutoResolve Network Tunnels")
     print("=======================================================\n")
 
     # 1. Clean up any existing/stale kubectl port-forwards
@@ -64,9 +64,9 @@ def main():
         processes.append(p)
 
     time.sleep(2)
-    print("\n✅ All tunnels established successfully!")
-    print("👉 You can now safely run your SRE Console in another terminal window.")
-    print("⚠️  Keep this window open. Press Ctrl+C here to close all tunnels when finished.\n")
+    print("\n[✅] All tunnels established successfully!")
+    print("[👉] You can now safely run your SRE Console in another terminal window.")
+    print("[⚠️] Keep this window open. Press Ctrl+C here to close all tunnels when finished.\n")
 
     # 4. Graceful termination block
     try:

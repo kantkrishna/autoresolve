@@ -1,4 +1,9 @@
-﻿from src.core.mcp_base.server import get_secure_mcp_server, secure_tool
+﻿# mcp-servers/terraform-mcp/tf_server.py
+
+# This file is part of the Terraform MCP Server, which provides an interface to execute
+# Terraform commands securely within a controlled environment.
+
+from src.core.mcp_base.server import get_secure_mcp_server, secure_tool
 
 mcp = get_secure_mcp_server("TerraformMCP")
 

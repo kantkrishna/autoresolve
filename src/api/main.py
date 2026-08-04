@@ -1,4 +1,8 @@
 # src/api/main.py
+
+# This file contains the FastAPI application for the AutoResolve API Gateway.
+# It handles Prometheus webhook ingestion, observability metrics, and health checks.
+
 import asyncio
 import logging
 import uuid

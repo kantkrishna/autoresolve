@@ -4027,6 +4027,21 @@ files = [
 ]
 
 [[package]]
+name = "python-ulid"
+version = "4.0.1"
+description = "Universally unique lexicographically sortable identifier"
+optional = false
+python-versions = ">=3.10"
+groups = ["main"]
+files = [
+    {file = "python_ulid-4.0.1-py3-none-any.whl", hash = "sha256:6f1d69ceb97e99fe542df8476ebcd7a668284bf53ee14b3106bcc6a341a95ed9"},
+    {file = "python_ulid-4.0.1.tar.gz", hash = "sha256:bbeec02556190bb9dc3401faa7268696acbfbe7b6db9908c155dc3548629f20c"},
+]
+
+[package.extras]
+pydantic = ["pydantic (>=2.0)"]
+
+[[package]]
 name = "pytokens"
 version = "0.4.1"
 description = "A Fast, spec compliant Python 3.14+ tokenizer that runs on older Pythons."
@@ -5648,4 +5663,4 @@ cffi = ["cffi (>=1.17,<2.0) ; platform_python_implementation != \"PyPy\" and pyt
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11,<3.14"
-content-hash = "9afcabf58b5db315563563391d1fffe0256ec22aec8a23c5a4dbf573c414c55b"
+content-hash = "8da7b399c2b5201fe1da1f9b71ee7670375ed46bbdfcfc83186fb5aafb1e0678"
