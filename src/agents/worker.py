@@ -9,6 +9,7 @@ import json
 import logging
 import os
 
+import ulid
 from aiokafka import AIOKafkaConsumer
 from aiokafka.errors import KafkaConnectionError, UnknownTopicOrPartitionError
 from langchain_core.messages import HumanMessage
@@ -62,10 +63,12 @@ async def consume_alerts():
         async for msg in consumer:
             try:
                 payload = json.loads(msg.value.decode("utf-8"))
-
-                # Multi-tier identification strategy to completely prevent 'UNKNOWN' threads
-                thread_id = f"TRK-{msg.partition}-{msg.offset}"
-
+                
+                # Consistently extract the ULID tracking ID from the payload or Kafka key
+                thread_id = payload.get("tracking_id")
+                if not thread_id:
+                    thread_id = msg.key.decode("utf-8") if msg.key else str(ulid.ULID())
+                    
                 logger.info(f"🚨 KAFKA ALERT RECEIVED: Processing Incident {thread_id}")
                 logger.info(f"🧠 Invoking LangGraph Swarm for {thread_id}...")
 
@@ -99,7 +102,6 @@ async def consume_alerts():
                 continue
     finally:
         await consumer.stop()
-        # agent_app.close()  <-- Note: LangGraph CompiledStateGraph doesn't typically have a .close() method 
 
 if __name__ == "__main__":
     asyncio.run(consume_alerts())

@@ -1,4 +1,4 @@
-# mcp-servers/kubernetes-mcp/server.py
+# mcp-servers/kubernetes-mcp/k8s_server.py
 # MCP servers to pull live data directly from the cluster using the official Python
 # Kubernetes and HTTP clients.
 

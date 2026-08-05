@@ -1,4 +1,4 @@
-# mcp-servers/prometheus-mcp/server.py
+# mcp-servers/prometheus-mcp/prom_server.py
 
 # Asynchronous HTTP client that fires real PromQL queries against the live Prometheus
 # service running inside k3d cluster via the port-forward

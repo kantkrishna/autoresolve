@@ -5,10 +5,10 @@
 
 import asyncio
 import logging
-import uuid
 from contextlib import asynccontextmanager
 from typing import Any, AsyncGenerator
 
+import ulid
 from fastapi import Depends, FastAPI, HTTPException, Request, Response, status
 from opentelemetry import trace
 from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
@@ -126,11 +126,16 @@ async def ingest_alert(alert: PrometheusAlert, request: Request) -> dict[str, An
         span.set_attribute("alert.status", getattr(alert, "status", "unknown"))
         
         try:
-            incident_id = alert.tracking_id if alert.tracking_id else str(uuid.uuid4())
+            # Generate a time-sortable ULID if one isn't provided
+            incident_id = alert.tracking_id if alert.tracking_id else str(ulid.ULID())
             
-            # Publish with the partition key
+            # Inject the ULID into the payload dictionary so downstream agents have it
+            payload_dict = alert.model_dump()
+            payload_dict["tracking_id"] = incident_id
+            
+            # Publish with the ULID as the partition key
             await publisher.publish_alert(
-                topic="incidents", payload=alert.model_dump(), key=incident_id
+                topic="incidents", payload=payload_dict, key=incident_id
             )
             
             span.set_attribute("event_bus.incident_id", incident_id)

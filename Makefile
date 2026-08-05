@@ -33,3 +33,6 @@ tunnels:
 
 workflow:
 	poetry run python scripts/incident_workflow.py
+
+qwen:
+	ollama run qwen2.5-coder:3b

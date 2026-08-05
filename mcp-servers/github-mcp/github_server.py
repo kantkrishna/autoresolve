@@ -19,10 +19,16 @@ def propose_github_fix(
     commit_message: str,
     branch_name: str,
 ) -> str:
-    """Creates a branch, updates a file, and drafts a PR with idempotency checks."""
+    """Creates a branch, updates or creates a file, and drafts a PR with idempotency checks."""
     token = os.getenv("GITHUB_TOKEN")
     if not token:
         return "Error: GITHUB_TOKEN environment variable is not set."
+
+    # Defensive Fallback for repo name
+    configured_repo = os.getenv("GITHUB_REPO")
+    if not repo_name or "your-org" in repo_name or "owner" in repo_name or "repo" in repo_name:
+        if configured_repo:
+            repo_name = configured_repo
 
     try:
         g = Github(token)
@@ -35,61 +41,42 @@ def propose_github_fix(
             repo.create_git_ref(ref=f"refs/heads/{branch_name}", sha=source_ref.commit.sha)
         except GithubException as e:
             if e.status == 422 and "Reference already exists" in str(e.data):
-                # Branch exists; proceed to update the file on the existing branch
                 pass
             else:
                 raise e
 
-        # 2. Sanitize the file path (Strip Docker's '/app/' or Windows 'C:/...' prefixes)
-        # This guarantees a repository-relative path 
-        # (e.g., 'kubernetes/lab/autoresolve-core.yaml')
-        clean_path = file_path.replace('\\', '/')
-        clean_path = re.sub(r'^/app/', '', clean_path)
-        if "autoresolve/" in clean_path:
-            clean_path = clean_path.split("autoresolve/")[-1]
-            clean_path = clean_path.lstrip('/')
+        # 2. Sanitize file path (Strip leading slashes or container prefixes)
+        file_path = re.sub(r"^(/app/|C:[\/\\])", "", file_path).lstrip("/")
 
-            # Smart Create vs. Update Logic
-            try:
-                # Attempt to fetch the existing file's SHA
-                contents = repo.get_contents(clean_path, ref=branch_name)
-                
-                # If successful, UPDATE the existing file
-                repo.update_file(
-                    path=clean_path,
+        # 3. Robust File Commit (Update if exists, Create if not)
+        file_updated = False
+        try:
+            file_obj = repo.get_contents(file_path, ref=branch_name)
+            repo.update_file(
+                path=file_path,
+                message=commit_message,
+                content=new_content,
+                sha=file_obj.sha,
+                branch=branch_name,
+            )
+            file_updated = True
+        except GithubException as e:
+            if e.status == 404:
+                # File doesn't exist yet, create it fresh
+                repo.create_file(
+                    path=file_path,
                     message=commit_message,
                     content=new_content,
-                    sha=contents.sha,
-                    branch=branch_name
+                    branch=branch_name,
                 )
-            except GithubException as e:
-                if e.status == 404:
-                    # If the file DOES NOT exist (404), CREATE it natively
-                    repo.create_file(
-                        path=clean_path,
-                        message=commit_message,
-                        content=new_content,
-                        branch=branch_name
-                    )
-                else:
-                    # Re-raise if it's a legitimate auth or network error
-                    raise RuntimeError(f"GitHub API Error: {str(e)}")
+                file_updated = True
+            else:
+                return f"Error updating file content: {e.data}"
 
-        # # 2. File Update Logic
-        # try:
-        #     file_obj = repo.get_contents(file_path, ref=default_branch)
-        #     repo.update_file(
-        #         path=file_path,
-        #         message=commit_message,
-        #         content=new_content,
-        #         sha=file_obj.sha,
-        #         branch=branch_name,
-        #     )
-        # except GithubException as e:
-        #     # Catch file update collisions if the SHA doesn't match
-        #     return f"Error updating file content: {e.data}"
+        if not file_updated:
+            return "Error: Failed to commit file changes to the branch."
 
-        # 3. Idempotent Pull Request Creation
+        # 4. Idempotent Pull Request Creation
         try:
             pr = repo.create_pull(
                 title=commit_message,
@@ -99,13 +86,11 @@ def propose_github_fix(
             )
             return f"Success! Pull request drafted: {pr.html_url}"
         except GithubException as e:
-            # Safely handle the PR collision boundary
             if e.status == 422 and "A pull request already exists" in str(e.data):
-                # Fetch the existing PR and return its URL gracefully
                 existing_prs = repo.get_pulls(state='open', head=f"{repo.owner.login}:{branch_name}")
                 if existing_prs.totalCount > 0:
                     return f"Success! Existing Pull request updated: {existing_prs[0].html_url}"
-            raise e
+            return f"GitHub Execution Error: {str(e)}"
 
     except Exception as e:
         return f"GitHub Execution Error: {str(e)}"

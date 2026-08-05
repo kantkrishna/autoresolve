@@ -99,6 +99,8 @@ spec:
                 secretKeyRef:
                   name: autoresolve-secrets
                   key: GITHUB_TOKEN
+            - name: OLLAMA_API_BASE
+              value: "http://host.docker.internal:11434"
             - name: API_KEY
               value: "mock-production-token"
             - name: AUTORESOLVE_API_KEY
