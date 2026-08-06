@@ -1,4 +1,5 @@
 # src/core/config.py
+
 from pydantic import Field, HttpUrl, PostgresDsn
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -25,28 +26,17 @@ class AutoResolveConfig(BaseSettings):
     QDRANT_API_KEY: str = Field(default="", description="Qdrant API Key (if hosted)")
 
     # AI & Orchestration
-    OPENAI_MODEL_NAME: str = Field(
-        env="OPENAI_MODEL_NAME",
-        description="Primary cloud model"
-    )
-    OPENAI_MODEL_NAME_FALLBACK1: str = Field(
-        env="OPENAI_MODEL_NAME_FALLBACK1",
-        description="First fallback model"
-    )
-    OPENAI_MODEL_NAME_FALLBACK2: str = Field(
-        env="OPENAI_MODEL_NAME_FALLBACK2",
-        description="Second fallback model"
-    )
+    LLM_BACKEND: str = Field(..., description="Choose 'cloud' or 'local'")
+    
+    OPENAI_MODEL_NAME: str = Field(description="Primary cloud model")
+    OPENAI_MODEL_NAME_FALLBACK1: str = Field(description="First fallback model")
+    OPENAI_MODEL_NAME_FALLBACK2: str = Field(description="Second fallback model")
     OPENAI_API_KEY: str = Field(..., description="OpenAI API key")
+
+    LOCAL_MODEL_NAME: str = Field(description="Local Ollama model name")
+
     LANGCHAIN_TRACING_V2: str = Field(
         default="true", description="Enable LangSmith observability"
-    )
-
-    # OLLAMA Hybrid Routing
-    LLM_BACKEND: str = Field(env="LLM_BACKEND", description="Choose 'cloud' or 'local'")
-    LOCAL_MODEL_NAME: str = Field(
-        env="LOCAL_MODEL_NAME",
-        description="Local Ollama model name"
     )
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")

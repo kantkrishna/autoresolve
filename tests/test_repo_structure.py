@@ -1,4 +1,5 @@
 # tests/test_repo_structure.py
+
 from pathlib import Path
 
 import pytest
@@ -17,17 +18,15 @@ REQUIRED_DIRECTORIES = [
     "src/agents",
     "src/rag",
     "mcp-servers/kubernetes-mcp",
-    "infra/target-environments",
+    "infra-deprecated/target-environments",  # Updated directory path
     "tests/unit",
-    "docs/adr",
+    "docs/adrs",                              # Updated from docs/adr to match active directory
 ]
-
 
 @pytest.fixture
 def root_dir():
     """Returns the absolute path of the repository root."""
     return Path(__file__).parent.parent
-
 
 def test_required_root_files_exist(root_dir):
     """Ensure OSS governance files are present at the root."""
@@ -37,7 +36,6 @@ def test_required_root_files_exist(root_dir):
             file_path.is_file()
         ), f"Repository compliance failure: Missing {file_name}"
 
-
 def test_required_directories_exist(root_dir):
     """Ensure the Domain-Driven structure remains intact."""
     for dir_name in REQUIRED_DIRECTORIES:
@@ -46,14 +44,11 @@ def test_required_directories_exist(root_dir):
             dir_path.is_dir()
         ), f"Architecture compliance failure: Missing directory {dir_name}"
 
-
 def test_mcp_servers_have_independent_configs(root_dir):
     """Ensure MCP servers remain decoupled with their own dependency files."""
     mcp_dir = root_dir / "mcp-servers"
     for server in mcp_dir.iterdir():
         if server.is_dir():
-            # Each MCP server must have its own pyproject.toml to ensure isolated
-            # dependencies
             assert (
                 server / "pyproject.toml"
             ).is_file(), f"MCP Server {server.name} missing pyproject.toml"

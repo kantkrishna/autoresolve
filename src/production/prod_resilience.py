@@ -1,5 +1,5 @@
 """
-autoresolve/production/resilience.py
+autoresolve/src/production/resilience.py
 
 Implements enterprise-grade resilience patterns including Circuit Breakers
 and Health Readiness checks for LangGraph and MCP integrations.
@@ -17,9 +17,9 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 class CircuitState(Enum):
-    CLOSED = "CLOSED"     # Normal operation
-    OPEN = "OPEN"         # Failing, rejecting requests
-    HALF_OPEN = "HALF_OPEN" # Testing if recovered
+    CLOSED = "CLOSED"  # Normal operation
+    OPEN = "OPEN"  # Failing, rejecting requests
+    HALF_OPEN = "HALF_OPEN"  # Testing if recovered
 
 class CircuitBreakerConfig(BaseModel):
     """Configuration for the Circuit Breaker."""

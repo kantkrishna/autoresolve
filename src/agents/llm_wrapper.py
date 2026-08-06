@@ -1,6 +1,8 @@
-"""
-src/agents/llm_wrapper.py
-"""
+# src/agents/llm_wrapper.py
+
+# This module provides a resilient wrapper around LLM calls, ensuring that
+# failures in external LLM services do not cascade and degrade the entire system.
+
 from typing import Any
 
 from langchain_litellm import ChatLiteLLM

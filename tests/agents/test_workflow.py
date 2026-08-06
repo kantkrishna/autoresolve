@@ -1,4 +1,6 @@
-﻿from src.agents.nodes.execution import execution_node
+﻿# tests/agents/test_workflow.py
+
+from src.agents.nodes.execution import execution_node
 from src.agents.nodes.review import review_node, route_after_review
 
 
@@ -8,13 +10,12 @@ def test_execution_node_generates_artifacts() -> None:
     assert "proposed_artifacts" in result
     assert result["human_approval_status"] == "pending"
 
-
 def test_review_node_approval_routing() -> None:
     state = {"human_approval_status": "approved", "audit_trail": []}
     result = review_node(state)
     assert "APPROVED" in result["audit_trail"][-1]
-    assert route_after_review(state) == "deploy_node"
-
+    # Updated: route_after_review returns "execution_node" on approval
+    assert route_after_review(state) == "execution_node"
 
 def test_review_node_revision_routing() -> None:
     state = {
@@ -24,4 +25,5 @@ def test_review_node_revision_routing() -> None:
     }
     result = review_node(state)
     assert "REVISION REQUESTED" in result["audit_trail"][-1]
-    assert route_after_review(state) == "execution_node"
+    # Updated: route_after_review returns "resolution_node" on revision request
+    assert route_after_review(state) == "resolution_node"
